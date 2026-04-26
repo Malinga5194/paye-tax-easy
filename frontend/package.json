@@ -1,0 +1,17 @@
+{
+  "name": "paye-tax-easy-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "employer-portal",
+    "employee-portal",
+    "ird-dashboard"
+  ],
+  "scripts": {
+    "dev:employer": "npm run dev --workspace=employer-portal",
+    "dev:employee": "npm run dev --workspace=employee-portal",
+    "dev:ird": "npm run dev --workspace=ird-dashboard",
+    "build:all": "npm run build --workspaces",
+    "lint:all": "npm run lint --workspaces"
+  }
+}

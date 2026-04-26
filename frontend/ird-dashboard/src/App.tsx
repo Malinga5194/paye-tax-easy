@@ -1,0 +1,25 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import CompliancePage from './pages/CompliancePage';
+import AuditLogPage from './pages/AuditLogPage';
+
+let _token: string | null = null;
+export const setToken = (t: string | null) => { _token = t; };
+export const getToken = () => _token;
+
+function PrivateRoute({ children }: { children: React.ReactNode }) {
+  return getToken() ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/compliance" element={<PrivateRoute><CompliancePage /></PrivateRoute>} />
+        <Route path="/audit-logs" element={<PrivateRoute><AuditLogPage /></PrivateRoute>} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
