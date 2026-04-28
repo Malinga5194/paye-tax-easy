@@ -4,6 +4,7 @@ using AspNetCoreRateLimit;
 using PayeTaxEasy.Infrastructure;
 using System.Text;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -114,29 +115,46 @@ app.MapControllers();
 app.MapHealthChecks("/health");
 
 // ── DEV: /auth/login endpoint — issues local JWT tokens ──────────────────────
-app.MapPost("/auth/login", (LoginRequest req) =>
+app.MapPost("/auth/login", async (LoginRequest req, PayeTaxEasy.Infrastructure.Data.PayeTaxEasyDbContext db) =>
 {
-    // Dev credentials — any of these work for testing
-    var users = new Dictionary<string, (string role, string tin, string name)>
-    {
-        ["employer@test.com"]  = ("Employer",    "EMP001TIN", "ABC Company Ltd"),
-        ["employee@test.com"]  = ("Employee",    "EMP123456V", "John Silva"),
-        ["ird@test.com"]       = ("IRD_Officer", "IRD001",    "IRD Officer"),
-        ["admin@test.com"]     = ("SystemAdmin", "ADM001",    "System Admin"),
-    };
+    // Check database users first
+    var user = await db.AppUsers.FirstOrDefaultAsync(u =>
+        u.Email.ToLower() == req.Email.ToLower() && u.IsActive);
 
-    if (!users.TryGetValue(req.Email.ToLower(), out var user) || req.Password != "Test@1234")
-        return Results.Json(new { errorCode = "AUTH_001", message = "Invalid credentials." },
-            statusCode: 401);
+    string role, tin, name;
+
+    if (user != null)
+    {
+        // Verify password hash
+        if (!BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
+            return Results.Json(new { errorCode = "AUTH_001", message = "Invalid credentials." }, statusCode: 401);
+        role = user.Role;
+        tin = user.TIN;
+        name = user.FullName;
+    }
+    else
+    {
+        // Fall back to hardcoded dev users
+        var devUsers = new Dictionary<string, (string role, string tin, string name)>
+        {
+            ["employer@test.com"]  = ("Employer",    "EMP001TIN",  "ABC Company Ltd"),
+            ["employee@test.com"]  = ("Employee",    "EMP123456V", "John Silva"),
+            ["ird@test.com"]       = ("IRD_Officer", "IRD001",     "IRD Officer"),
+            ["admin@test.com"]     = ("SystemAdmin", "ADM001",     "System Admin"),
+        };
+        if (!devUsers.TryGetValue(req.Email.ToLower(), out var devUser) || req.Password != "Test@1234")
+            return Results.Json(new { errorCode = "AUTH_001", message = "Invalid credentials." }, statusCode: 401);
+        role = devUser.role; tin = devUser.tin; name = devUser.name;
+    }
 
     var claims = new[]
     {
-        new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
+        new Claim(ClaimTypes.NameIdentifier, user?.Id.ToString() ?? Guid.NewGuid().ToString()),
         new Claim(ClaimTypes.Email, req.Email),
-        new Claim(ClaimTypes.Role, user.role),
-        new Claim("extension_TIN", user.tin),
-        new Claim("name", user.name),
-        new Claim("sub", Guid.NewGuid().ToString()),
+        new Claim(ClaimTypes.Role, role),
+        new Claim("extension_TIN", tin),
+        new Claim("name", name),
+        new Claim("sub", user?.Id.ToString() ?? Guid.NewGuid().ToString()),
     };
 
     var creds = new SigningCredentials(devKey, SecurityAlgorithms.HmacSha256);
@@ -148,9 +166,42 @@ app.MapPost("/auth/login", (LoginRequest req) =>
         signingCredentials: creds);
 
     var tokenStr = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().WriteToken(token);
-    return Results.Ok(new { accessToken = tokenStr, role = user.role, name = user.name, expiresIn = 28800 });
+    return Results.Ok(new { accessToken = tokenStr, role, name, expiresIn = 28800 });
+}).AllowAnonymous();
+
+// ── /auth/register endpoint ───────────────────────────────────────────────────
+app.MapPost("/auth/register", async (RegisterRequest req, PayeTaxEasy.Infrastructure.Data.PayeTaxEasyDbContext db) =>
+{
+    // Validate
+    if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password)
+        || string.IsNullOrWhiteSpace(req.FullName) || string.IsNullOrWhiteSpace(req.Role))
+        return Results.Json(new { errorCode = "REG_001", message = "All fields are required." }, statusCode: 422);
+
+    var validRoles = new[] { "Employer", "Employee", "IRD_Officer" };
+    if (!validRoles.Contains(req.Role))
+        return Results.Json(new { errorCode = "REG_002", message = "Invalid role. Must be Employer, Employee, or IRD_Officer." }, statusCode: 422);
+
+    var exists = await db.AppUsers.AnyAsync(u => u.Email.ToLower() == req.Email.ToLower());
+    if (exists)
+        return Results.Json(new { errorCode = "REG_003", message = "An account with this email already exists." }, statusCode: 409);
+
+    var newUser = new PayeTaxEasy.Infrastructure.Entities.AppUser
+    {
+        Email = req.Email.ToLower(),
+        PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
+        Role = req.Role,
+        FullName = req.FullName,
+        TIN = req.TIN ?? string.Empty,
+        IsActive = true,
+        CreatedAt = DateTime.UtcNow
+    };
+    db.AppUsers.Add(newUser);
+    await db.SaveChangesAsync();
+
+    return Results.Ok(new { message = "Account created successfully.", userId = newUser.Id, role = newUser.Role });
 }).AllowAnonymous();
 
 app.Run();
 
 record LoginRequest(string Email, string Password);
+record RegisterRequest(string Email, string Password, string FullName, string Role, string? TIN);

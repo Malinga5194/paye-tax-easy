@@ -17,6 +17,7 @@ public class PayeTaxEasyDbContext : DbContext
     public DbSet<NotificationLog> NotificationLogs => Set<NotificationLog>();
     public DbSet<IrdCumulativeCache> IrdCumulativeCaches => Set<IrdCumulativeCache>();
     public DbSet<SecurityAlertLog> SecurityAlertLogs => Set<SecurityAlertLog>();
+    public DbSet<AppUser> AppUsers => Set<AppUser>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -165,6 +166,20 @@ public class PayeTaxEasyDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.RetrievedByEmployerId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── AppUser ───────────────────────────────────────────────────────────
+        modelBuilder.Entity<AppUser>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.Email).HasMaxLength(200).IsRequired();
+            e.Property(x => x.PasswordHash).HasMaxLength(500).IsRequired();
+            e.Property(x => x.Role).HasMaxLength(50).IsRequired();
+            e.Property(x => x.FullName).HasMaxLength(200).IsRequired();
+            e.Property(x => x.TIN).HasMaxLength(20);
+            e.HasIndex(x => x.Email).IsUnique();
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         });
 
         // ── SecurityAlertLog ──────────────────────────────────────────────────

@@ -70,6 +70,9 @@ export default function LoginPage() {
               <button style={{ ...styles.button, background: COLOR }} type="submit" disabled={loading}>
                 {loading ? 'Signing in...' : 'Sign In to Employer Portal'}
               </button>
+              <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.9rem', color: '#666' }}>
+                Don't have an account? <a href="/register" style={{ color: COLOR, fontWeight: 600 }}>Create Account</a>
+              </p>
             </form>
           </div>
         </div>
