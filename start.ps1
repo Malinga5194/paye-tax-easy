@@ -4,6 +4,9 @@
 #   Right-click start.ps1 → Run with PowerShell
 # ============================================================
 
+# Allow script execution
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force 2>$null
+
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "   PAYE Tax Easy — Starting System      " -ForegroundColor Cyan

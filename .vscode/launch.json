@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend API",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-api",
+      "program": "${workspaceFolder}/src/PayeTaxEasy.Api/bin/Debug/net8.0/PayeTaxEasy.Api.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/PayeTaxEasy.Api",
+      "env": {
+        "ASPNETCORE_URLS": "http://localhost:5050",
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack (API + All Portals)",
+      "configurations": ["Backend API"],
+      "preLaunchTask": "start-all-frontends",
+      "stopAll": true
+    }
+  ]
+}

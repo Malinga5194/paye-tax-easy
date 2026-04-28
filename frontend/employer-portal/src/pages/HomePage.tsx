@@ -74,7 +74,7 @@ function PortalCard({ icon, title, description, color, href, buttonLabel }: Port
       <div style={styles.cardIcon}>{icon}</div>
       <h2 style={{ ...styles.cardTitle, color }}>{title}</h2>
       <p style={styles.cardDesc}>{description}</p>
-      <a href={href} style={{ ...styles.cardBtn, background: color }}>
+      <a href={href} target="_blank" rel="noopener noreferrer" style={{ ...styles.cardBtn, background: color }}>
         {buttonLabel} →
       </a>
     </div>

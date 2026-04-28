@@ -3,58 +3,131 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { setToken } from '../App';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5050';
+const COLOR = '#7b1fa2';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
     try {
       const res = await axios.post(`${API}/auth/login`, { email, password });
       setToken(res.data.accessToken);
       navigate('/compliance');
     } catch {
-      setError('Invalid credentials.');
+      setError('Invalid credentials. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>PAYE Tax Easy</h1>
-        <p style={styles.subtitle}>IRD Officer Dashboard</p>
-        <div style={{ background: '#f3e5f5', border: '1px solid #ce93d8', borderRadius: '4px', padding: '10px', marginBottom: '1rem', fontSize: '0.85rem', color: '#4a148c' }}>
-          <strong>Dev credentials:</strong><br />
-          Email: <code>ird@test.com</code> | Password: <code>Test@1234</code>
+    <div style={styles.page}>
+      {/* Header */}
+      <header style={{ ...styles.header, background: COLOR }}>
+        <div style={styles.headerLeft}>
+          <span style={styles.headerLogo}>🏛️</span>
+          <div>
+            <div style={styles.headerTitle}>PAYE Tax Easy</div>
+            <div style={styles.headerSub}>Inland Revenue Department — Sri Lanka</div>
+          </div>
         </div>
-        <form onSubmit={handleLogin}>
-          <div style={styles.field}>
-            <label style={styles.label}>Email</label>
-            <input style={styles.input} type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+        <a href="http://localhost:5173" style={styles.homeBtn}>← Back to Home</a>
+      </header>
+
+      {/* Main */}
+      <main style={styles.main}>
+        <div style={styles.card}>
+          <div style={{ ...styles.cardHeader, background: COLOR }}>
+            <span style={styles.cardIcon}>🏛️</span>
+            <h2 style={styles.cardTitle}>IRD Officer Dashboard</h2>
+            <p style={styles.cardSubtitle}>Compliance monitoring and audit management</p>
           </div>
-          <div style={styles.field}>
-            <label style={styles.label}>Password</label>
-            <input style={styles.input} type="password" value={password} onChange={e => setPassword(e.target.value)} required />
+          <div style={styles.cardBody}>
+            <div style={styles.hint}>
+              <strong>Dev credentials:</strong><br />
+              Email: <code>ird@test.com</code> &nbsp;|&nbsp; Password: <code>Test@1234</code>
+            </div>
+            <form onSubmit={handleLogin}>
+              <div style={styles.field}>
+                <label style={styles.label}>Email Address</label>
+                <input style={styles.input} type="email" value={email}
+                  onChange={e => setEmail(e.target.value)} placeholder="Enter your email" required />
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Password</label>
+                <input style={styles.input} type="password" value={password}
+                  onChange={e => setPassword(e.target.value)} placeholder="Enter your password" required />
+              </div>
+              {error && <p style={styles.error}>⚠ {error}</p>}
+              <button style={{ ...styles.button, background: COLOR }} type="submit" disabled={loading}>
+                {loading ? 'Signing in...' : 'Sign In to IRD Dashboard'}
+              </button>
+            </form>
           </div>
-          {error && <p style={{ color: '#c0392b' }}>{error}</p>}
-          <button style={styles.button} type="submit">Sign In</button>
-        </form>
-      </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer style={styles.footer}>
+        <div style={styles.footerTop}>
+          <div style={styles.footerCol}>
+            <strong>PAYE Tax Easy</strong>
+            <p>A centralized PAYE tax management platform for Sri Lanka, integrating employer payroll systems with the Inland Revenue Department.</p>
+          </div>
+          <div style={styles.footerCol}>
+            <strong>Portals</strong>
+            <a href="http://localhost:5173" style={styles.footerLink}>🏠 Landing Page</a>
+            <a href="http://localhost:5173" target="_blank" style={styles.footerLink}>🏢 Employer Portal</a>
+            <a href="http://localhost:5174" target="_blank" style={styles.footerLink}>👤 Employee Portal</a>
+            <a href="http://localhost:5175" style={styles.footerLink}>🏛️ IRD Dashboard</a>
+          </div>
+          <div style={styles.footerCol}>
+            <strong>Legal</strong>
+            <p style={{ fontSize: '0.8rem', color: '#aaa' }}>Inland Revenue (Amendment) Act, No. 02 of 2025</p>
+            <p style={{ fontSize: '0.8rem', color: '#aaa' }}>Financial Year: 1 April 2025 – 31 March 2026</p>
+            <p style={{ fontSize: '0.8rem', color: '#aaa' }}>Filing Deadline: 30 November 2026</p>
+          </div>
+        </div>
+        <div style={styles.footerBottom}>
+          © 2025 PAYE Tax Easy &nbsp;|&nbsp; SLIIT MSc IT — Software Engineering Practices (IT5030) &nbsp;|&nbsp; Group 02
+        </div>
+      </footer>
     </div>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  container: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f4f8' },
-  card: { background: '#fff', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 12px rgba(0,0,0,0.1)', width: '360px' },
-  title: { margin: 0, color: '#7b1fa2', fontSize: '1.8rem' },
-  subtitle: { color: '#666', marginBottom: '1.5rem' },
+  page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f0f4f8', fontFamily: "'Segoe UI', sans-serif" },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', color: '#fff' },
+  headerLeft: { display: 'flex', alignItems: 'center', gap: '1rem' },
+  headerLogo: { fontSize: '2rem' },
+  headerTitle: { fontWeight: 700, fontSize: '1.3rem' },
+  headerSub: { fontSize: '0.8rem', opacity: 0.8 },
+  homeBtn: { padding: '8px 18px', background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.5)', borderRadius: '6px', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' },
+  main: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' },
+  card: { width: '420px', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.12)' },
+  cardHeader: { padding: '1.5rem', color: '#fff', textAlign: 'center' },
+  cardIcon: { fontSize: '2.5rem' },
+  cardTitle: { margin: '0.5rem 0 0.25rem', fontSize: '1.4rem' },
+  cardSubtitle: { margin: 0, opacity: 0.85, fontSize: '0.9rem' },
+  cardBody: { background: '#fff', padding: '1.5rem' },
+  hint: { background: '#f3e5f5', border: '1px solid #ce93d8', borderRadius: '6px', padding: '10px 14px', marginBottom: '1.2rem', fontSize: '0.85rem', color: '#4a148c' },
   field: { marginBottom: '1rem' },
-  label: { display: 'block', marginBottom: '4px', fontWeight: 600 },
-  input: { width: '100%', padding: '8px 12px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '1rem', boxSizing: 'border-box' },
-  button: { width: '100%', padding: '10px', background: '#7b1fa2', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '1rem', cursor: 'pointer' },
+  label: { display: 'block', marginBottom: '5px', fontWeight: 600, color: '#333', fontSize: '0.9rem' },
+  input: { width: '100%', padding: '10px 12px', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem', boxSizing: 'border-box' },
+  error: { color: '#c0392b', fontSize: '0.9rem', marginBottom: '1rem', background: '#fdecea', padding: '8px 12px', borderRadius: '6px' },
+  button: { width: '100%', padding: '12px', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '1rem', cursor: 'pointer', fontWeight: 600, marginTop: '0.5rem' },
+  footer: { background: '#1a1a2e', color: '#ccc', padding: '2rem' },
+  footerTop: { display: 'flex', gap: '2rem', flexWrap: 'wrap', marginBottom: '1.5rem', justifyContent: 'space-between' },
+  footerCol: { display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1, minWidth: '180px', fontSize: '0.85rem' },
+  footerLink: { color: '#aaa', textDecoration: 'none', fontSize: '0.85rem' },
+  footerBottom: { borderTop: '1px solid #333', paddingTop: '1rem', textAlign: 'center', fontSize: '0.8rem', color: '#888' },
 };
