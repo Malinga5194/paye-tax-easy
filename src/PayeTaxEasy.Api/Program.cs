@@ -114,6 +114,31 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
+// ── Seed default admin user on startup ───────────────────────────────────────
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<PayeTaxEasy.Infrastructure.Data.PayeTaxEasyDbContext>();
+    try
+    {
+        var adminExists = db.AppUsers.AsEnumerable().Any(u => u.Role == "SystemAdmin");
+        if (!adminExists)
+        {
+            db.AppUsers.Add(new PayeTaxEasy.Infrastructure.Entities.AppUser
+            {
+                Email = "admin@payetaxeasy.lk",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@1234"),
+                Role = "SystemAdmin",
+                FullName = "System Administrator",
+                TIN = "ADMIN001",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            });
+            db.SaveChanges();
+        }
+    }
+    catch { /* DB not ready yet — skip seeding */ }
+}
+
 // ── DEV: /auth/login endpoint — issues local JWT tokens ──────────────────────
 app.MapPost("/auth/login", async (LoginRequest req, PayeTaxEasy.Infrastructure.Data.PayeTaxEasyDbContext db) =>
 {

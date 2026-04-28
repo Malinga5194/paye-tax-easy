@@ -35,6 +35,14 @@ export default function HomePage() {
           href="http://localhost:5175"
           buttonLabel="IRD Officer Login"
         />
+        <PortalCard
+          icon="🔐"
+          title="Admin Portal"
+          description="Manage user accounts, create logins for all portal types, activate or deactivate users."
+          color="#b71c1c"
+          href="http://localhost:5176"
+          buttonLabel="Admin Login"
+        />
       </div>
 
       <div style={styles.infoBar}>

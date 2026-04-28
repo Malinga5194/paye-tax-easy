@@ -38,8 +38,13 @@ Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$ro
 Start-Sleep -Seconds 2
 
 # ── Step 5: Start IRD Dashboard ──────────────────────────────
-Write-Host "[5/5] Starting IRD Dashboard on http://localhost:5175 ..." -ForegroundColor Yellow
+Write-Host "[5/6] Starting IRD Dashboard on http://localhost:5175 ..." -ForegroundColor Yellow
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root\frontend\ird-dashboard'; npm run dev" -WindowStyle Normal
+Start-Sleep -Seconds 2
+
+# ── Step 6: Start Admin Portal ───────────────────────────────
+Write-Host "[6/6] Starting Admin Portal on http://localhost:5176 ..." -ForegroundColor Yellow
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root\frontend\admin-portal'; npm run dev" -WindowStyle Normal
 Start-Sleep -Seconds 3
 
 # ── Done ──────────────────────────────────────────────────────
@@ -53,11 +58,13 @@ Write-Host "  Swagger UI    : http://localhost:5050/swagger" -ForegroundColor Wh
 Write-Host "  Employer      : http://localhost:5173"         -ForegroundColor White
 Write-Host "  Employee      : http://localhost:5174"         -ForegroundColor White
 Write-Host "  IRD Dashboard : http://localhost:5175"         -ForegroundColor White
+Write-Host "  Admin Portal  : http://localhost:5176"         -ForegroundColor White
 Write-Host ""
 Write-Host "  Login credentials:" -ForegroundColor White
-Write-Host "  Employer  -> employer@test.com  / Test@1234"  -ForegroundColor Gray
-Write-Host "  Employee  -> employee@test.com  / Test@1234"  -ForegroundColor Gray
-Write-Host "  IRD       -> ird@test.com        / Test@1234"  -ForegroundColor Gray
+Write-Host "  Employer  -> employer@test.com   / Test@1234"   -ForegroundColor Gray
+Write-Host "  Employee  -> employee@test.com   / Test@1234"   -ForegroundColor Gray
+Write-Host "  IRD       -> ird@test.com         / Test@1234"  -ForegroundColor Gray
+Write-Host "  Admin     -> admin@payetaxeasy.lk / Admin@1234" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  NOTE: If a port is in use, Vite will pick the next available one." -ForegroundColor DarkYellow
 Write-Host "        Check the terminal window for the actual URL." -ForegroundColor DarkYellow
@@ -69,6 +76,7 @@ Start-Process "http://localhost:5050/swagger"
 Start-Process "http://localhost:5173"
 Start-Process "http://localhost:5174"
 Start-Process "http://localhost:5175"
+Start-Process "http://localhost:5176"
 
 Write-Host "  Browser tabs opened. Press any key to exit this window." -ForegroundColor Green
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
