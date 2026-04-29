@@ -39,7 +39,8 @@ public class AdminController : ControllerBase
         if (!validRoles.Contains(req.Role))
             return UnprocessableEntity(new { errorCode = "REG_002", message = "Invalid role." });
 
-        var exists = await _db.AppUsers.AnyAsync(u => u.Email.ToLower() == req.Email.ToLower());
+        var allUsers = await _db.AppUsers.ToListAsync();
+        var exists = allUsers.Any(u => u.Email.Equals(req.Email, StringComparison.OrdinalIgnoreCase));
         if (exists)
             return Conflict(new { errorCode = "REG_003", message = "Email already exists." });
 

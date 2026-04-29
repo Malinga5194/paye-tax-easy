@@ -23,7 +23,7 @@ Write-Host "      Database ready." -ForegroundColor Green
 
 # ── Step 2: Start Backend API ─────────────────────────────────
 Write-Host "[2/5] Starting Backend API on http://localhost:5050 ..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root'; dotnet run --project src/PayeTaxEasy.Api --urls 'http://localhost:5050'" -WindowStyle Normal
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root'; dotnet run --project src/PayeTaxEasy.Api --urls 'http://localhost:5050' --environment Development" -WindowStyle Normal
 Start-Sleep -Seconds 5
 Write-Host "      API started." -ForegroundColor Green
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { setToken } from '../App';
+import { Header, Footer } from '../components/Layout';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5050';
 const COLOR = '#b71c1c';
@@ -34,17 +35,7 @@ export default function LoginPage() {
 
   return (
     <div style={styles.page}>
-      <header style={{ ...styles.header, background: COLOR }}>
-        <div style={styles.headerLeft}>
-          <span style={styles.headerLogo}>🏛️</span>
-          <div>
-            <div style={styles.headerTitle}>PAYE Tax Easy</div>
-            <div style={styles.headerSub}>System Administration</div>
-          </div>
-        </div>
-        <a href="http://localhost:5173" style={styles.homeBtn}>← Back to Home</a>
-      </header>
-
+      <Header portalName="Admin Portal" portalIcon="🔐" color={COLOR} />
       <main style={styles.main}>
         <div style={styles.card}>
           <div style={{ ...styles.cardHeader, background: COLOR }}>
@@ -53,7 +44,7 @@ export default function LoginPage() {
             <p style={styles.cardSubtitle}>User management and system administration</p>
           </div>
           <div style={styles.cardBody}>
-            <div style={styles.hint}>
+            <div style={{ ...styles.hint, background: '#fdecea', border: '1px solid #ef9a9a', color: '#b71c1c' }}>
               <strong>Default admin credentials:</strong><br />
               Email: <code>admin@payetaxeasy.lk</code> &nbsp;|&nbsp; Password: <code>Admin@1234</code>
             </div>
@@ -76,24 +67,13 @@ export default function LoginPage() {
           </div>
         </div>
       </main>
-
-      <footer style={styles.footer}>
-        <div style={styles.footerBottom}>
-          © 2025 PAYE Tax Easy &nbsp;|&nbsp; SLIIT MSc IT — Software Engineering Practices (IT5030) &nbsp;|&nbsp; Group 02
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
   page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f0f4f8', fontFamily: "'Segoe UI', sans-serif" },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', color: '#fff' },
-  headerLeft: { display: 'flex', alignItems: 'center', gap: '1rem' },
-  headerLogo: { fontSize: '2rem' },
-  headerTitle: { fontWeight: 700, fontSize: '1.3rem' },
-  headerSub: { fontSize: '0.8rem', opacity: 0.8 },
-  homeBtn: { padding: '8px 18px', background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.5)', borderRadius: '6px', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' },
   main: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' },
   card: { width: '420px', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.12)' },
   cardHeader: { padding: '1.5rem', color: '#fff', textAlign: 'center' },
@@ -101,12 +81,10 @@ const styles: Record<string, React.CSSProperties> = {
   cardTitle: { margin: '0.5rem 0 0.25rem', fontSize: '1.4rem' },
   cardSubtitle: { margin: 0, opacity: 0.85, fontSize: '0.9rem' },
   cardBody: { background: '#fff', padding: '1.5rem' },
-  hint: { background: '#fdecea', border: '1px solid #ef9a9a', borderRadius: '6px', padding: '10px 14px', marginBottom: '1.2rem', fontSize: '0.85rem', color: '#b71c1c' },
+  hint: { borderRadius: '6px', padding: '10px 14px', marginBottom: '1.2rem', fontSize: '0.85rem' },
   field: { marginBottom: '1rem' },
   label: { display: 'block', marginBottom: '5px', fontWeight: 600, color: '#333', fontSize: '0.9rem' },
   input: { width: '100%', padding: '10px 12px', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem', boxSizing: 'border-box' },
   error: { color: '#c0392b', fontSize: '0.9rem', marginBottom: '1rem', background: '#fdecea', padding: '8px 12px', borderRadius: '6px' },
-  button: { width: '100%', padding: '12px', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '1rem', cursor: 'pointer', fontWeight: 600 },
-  footer: { background: '#1a1a2e', color: '#ccc', padding: '1rem 2rem' },
-  footerBottom: { textAlign: 'center', fontSize: '0.8rem', color: '#888' },
+  button: { width: '100%', padding: '12px', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '1rem', cursor: 'pointer', fontWeight: 600, marginTop: '0.5rem' },
 };

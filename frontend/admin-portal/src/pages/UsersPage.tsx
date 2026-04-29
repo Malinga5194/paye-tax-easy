@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getToken } from '../App';
+import { Header, Footer } from '../components/Layout';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5050';
 const COLOR = '#b71c1c';
-const HOME_URL = 'http://localhost:5173';
 
 interface User {
   id: string;
@@ -62,16 +62,8 @@ export default function UsersPage() {
   const filtered = filterRole === 'All' ? users : users.filter(u => u.role === filterRole);
 
   return (
-    <div style={{ fontFamily: "'Segoe UI', sans-serif", background: '#f0f4f8', minHeight: '100vh' }}>
-      {/* Navbar */}
-      <nav style={{ background: COLOR, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.5rem', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <a href={HOME_URL} style={{ color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: '1.1rem' }}>🏛️ PAYE Tax Easy</a>
-          <span style={{ opacity: 0.4 }}>|</span>
-          <span style={{ opacity: 0.85 }}>🔐 Admin Portal</span>
-        </div>
-        <a href={HOME_URL} style={{ padding: '5px 14px', background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '4px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600 }}>← Home</a>
-      </nav>
+    <div style={{ fontFamily: "'Segoe UI', sans-serif", background: '#f0f4f8', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Header portalName="Admin Portal" portalIcon="🔐" color={COLOR} />
 
       <div style={{ padding: '1.5rem' }}>
         {/* Header */}
@@ -176,6 +168,7 @@ export default function UsersPage() {
           </div>
         </div>
       )}
+      <Footer />
     </div>
   );
 }

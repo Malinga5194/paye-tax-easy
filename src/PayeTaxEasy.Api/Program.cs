@@ -139,47 +139,72 @@ using (var scope = app.Services.CreateScope())
     catch { /* DB not ready yet — skip seeding */ }
 }
 
+// ── Seed test data ────────────────────────────────────────────────────────────
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<PayeTaxEasy.Infrastructure.Data.PayeTaxEasyDbContext>();
+    PayeTaxEasy.Api.SeedData.Seed(db);
+}
+// ── Seed demo data ────────────────────────────────────────────────────────────
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<PayeTaxEasy.Infrastructure.Data.PayeTaxEasyDbContext>();
+    PayeTaxEasy.Api.SeedData.Seed(db);
+}
+
 // ── DEV: /auth/login endpoint — issues local JWT tokens ──────────────────────
 app.MapPost("/auth/login", async (LoginRequest req, PayeTaxEasy.Infrastructure.Data.PayeTaxEasyDbContext db) =>
 {
-    // Check database users first
-    var user = await db.AppUsers.FirstOrDefaultAsync(u =>
-        u.Email.ToLower() == req.Email.ToLower() && u.IsActive);
-
     string role, tin, name;
+    string userId = Guid.NewGuid().ToString();
 
-    if (user != null)
+    // Check hardcoded dev users FIRST (no DB needed)
+    var devUsers = new Dictionary<string, (string role, string tin, string name)>
     {
-        // Verify password hash
-        if (!BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
+        ["employer@test.com"]       = ("Employer",    "EMP001TIN",  "ABC Company Ltd"),
+        ["employee@test.com"]       = ("Employee",    "EMP123456V", "John Silva"),
+        ["ird@test.com"]            = ("IRD_Officer", "IRD001",     "IRD Officer"),
+        ["admin@test.com"]          = ("SystemAdmin", "ADM001",     "System Admin"),
+        ["admin@payetaxeasy.lk"]    = ("SystemAdmin", "ADMIN001",   "System Administrator"),
+    };
+
+    if (devUsers.TryGetValue(req.Email.ToLower(), out var devUser))
+    {
+        // Dev users: employer/employee/ird use Test@1234, admin uses Admin@1234
+        var expectedPwd = req.Email.ToLower() == "admin@payetaxeasy.lk" ? "Admin@1234" : "Test@1234";
+        if (req.Password != expectedPwd)
             return Results.Json(new { errorCode = "AUTH_001", message = "Invalid credentials." }, statusCode: 401);
-        role = user.Role;
-        tin = user.TIN;
-        name = user.FullName;
+        role = devUser.role; tin = devUser.tin; name = devUser.name;
     }
     else
     {
-        // Fall back to hardcoded dev users
-        var devUsers = new Dictionary<string, (string role, string tin, string name)>
+        // Check database for admin-created users
+        try
         {
-            ["employer@test.com"]  = ("Employer",    "EMP001TIN",  "ABC Company Ltd"),
-            ["employee@test.com"]  = ("Employee",    "EMP123456V", "John Silva"),
-            ["ird@test.com"]       = ("IRD_Officer", "IRD001",     "IRD Officer"),
-            ["admin@test.com"]     = ("SystemAdmin", "ADM001",     "System Admin"),
-        };
-        if (!devUsers.TryGetValue(req.Email.ToLower(), out var devUser) || req.Password != "Test@1234")
+            var allUsers = await db.AppUsers.ToListAsync();
+            var dbUser = allUsers.FirstOrDefault(u =>
+                u.Email.Equals(req.Email, StringComparison.OrdinalIgnoreCase) && u.IsActive);
+
+            if (dbUser == null || !BCrypt.Net.BCrypt.Verify(req.Password, dbUser.PasswordHash))
+                return Results.Json(new { errorCode = "AUTH_001", message = "Invalid credentials." }, statusCode: 401);
+
+            role = dbUser.Role; tin = dbUser.TIN; name = dbUser.FullName;
+            userId = dbUser.Id.ToString();
+        }
+        catch
+        {
             return Results.Json(new { errorCode = "AUTH_001", message = "Invalid credentials." }, statusCode: 401);
-        role = devUser.role; tin = devUser.tin; name = devUser.name;
+        }
     }
 
     var claims = new[]
     {
-        new Claim(ClaimTypes.NameIdentifier, user?.Id.ToString() ?? Guid.NewGuid().ToString()),
+        new Claim(ClaimTypes.NameIdentifier, userId),
         new Claim(ClaimTypes.Email, req.Email),
         new Claim(ClaimTypes.Role, role),
         new Claim("extension_TIN", tin),
         new Claim("name", name),
-        new Claim("sub", user?.Id.ToString() ?? Guid.NewGuid().ToString()),
+        new Claim("sub", userId),
     };
 
     var creds = new SigningCredentials(devKey, SecurityAlgorithms.HmacSha256);
@@ -206,7 +231,8 @@ app.MapPost("/auth/register", async (RegisterRequest req, PayeTaxEasy.Infrastruc
     if (!validRoles.Contains(req.Role))
         return Results.Json(new { errorCode = "REG_002", message = "Invalid role. Must be Employer, Employee, or IRD_Officer." }, statusCode: 422);
 
-    var exists = await db.AppUsers.AnyAsync(u => u.Email.ToLower() == req.Email.ToLower());
+    var allUsers = await db.AppUsers.ToListAsync();
+    var exists = allUsers.Any(u => u.Email.Equals(req.Email, StringComparison.OrdinalIgnoreCase));
     if (exists)
         return Results.Json(new { errorCode = "REG_003", message = "An account with this email already exists." }, statusCode: 409);
 
