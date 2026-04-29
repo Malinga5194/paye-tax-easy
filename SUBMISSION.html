@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PAYE Tax Easy — Code Submission</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; color: #222; background: #fff; }
+  .page { max-width: 800px; margin: 0 auto; padding: 40px; }
+
+  /* Cover */
+  .cover { text-align: center; padding: 60px 0 40px; border-bottom: 3px solid #003366; margin-bottom: 40px; }
+  .cover .logo { font-size: 48px; margin-bottom: 10px; }
+  .cover h1 { font-size: 28pt; color: #003366; margin-bottom: 8px; }
+  .cover h2 { font-size: 14pt; color: #555; font-weight: normal; margin-bottom: 30px; }
+  .cover .badge { display: inline-block; background: #003366; color: #fff; padding: 8px 24px; border-radius: 20px; font-size: 11pt; margin: 4px; }
+  .cover .meta { margin-top: 30px; font-size: 10pt; color: #666; line-height: 2; }
+
+  /* GitHub link box */
+  .github-box { background: #f0f4f8; border: 2px solid #003366; border-radius: 10px; padding: 24px 30px; margin: 30px 0; }
+  .github-box h3 { color: #003366; font-size: 14pt; margin-bottom: 12px; }
+  .github-box .link { font-size: 13pt; font-weight: bold; color: #003366; word-break: break-all; }
+  .github-box .link a { color: #003366; }
+  .github-box p { margin-top: 10px; font-size: 10pt; color: #555; }
+
+  /* Section headings */
+  h2.section { font-size: 16pt; color: #003366; border-bottom: 2px solid #003366; padding-bottom: 6px; margin: 36px 0 16px; }
+  h3.sub { font-size: 12pt; color: #003366; margin: 20px 0 8px; }
+  h4.subsub { font-size: 11pt; color: #333; margin: 14px 0 6px; font-weight: 600; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 10pt; }
+  th { background: #003366; color: #fff; padding: 8px 10px; text-align: left; }
+  td { padding: 7px 10px; border-bottom: 1px solid #ddd; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+
+  /* Code blocks */
+  pre { background: #f4f4f4; border: 1px solid #ddd; border-radius: 6px; padding: 12px 16px; font-family: 'Courier New', monospace; font-size: 9pt; margin: 10px 0; overflow-x: auto; white-space: pre-wrap; }
+  code { font-family: 'Courier New', monospace; background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 9.5pt; }
+
+  /* Notice boxes */
+  .notice { background: #fffbea; border: 1.5px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 14px 0; }
+  .notice strong { color: #92400e; }
+  .info { background: #e8f4fd; border: 1.5px solid #17a2b8; border-radius: 8px; padding: 14px 18px; margin: 14px 0; }
+  .success { background: #d4edda; border: 1.5px solid #27ae60; border-radius: 8px; padding: 14px 18px; margin: 14px 0; }
+
+  /* Scenario cards */
+  .scenario { border: 1px solid #ddd; border-radius: 8px; padding: 14px 18px; margin: 10px 0; border-left: 5px solid #003366; }
+  .scenario h4 { color: #003366; margin-bottom: 6px; }
+  .scenario p { font-size: 10pt; color: #444; line-height: 1.6; }
+
+  /* Footer */
+  .footer { text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 9pt; color: #888; }
+
+  /* Print */
+  @media print {
+    body { font-size: 10pt; }
+    .page { padding: 20px; }
+    .no-print { display: none; }
+    h2.section { page-break-before: always; }
+    h2.section:first-of-type { page-break-before: avoid; }
+  }
+
+  /* Print button */
+  .print-btn { position: fixed; top: 20px; right: 20px; background: #003366; color: #fff; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 11pt; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 999; }
+  .print-btn:hover { background: #002244; }
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">🖨️ Save as PDF</button>
+
+<div class="page">
+
+  <!-- Cover Page -->
+  <div class="cover">
+    <div class="logo">🏛️</div>
+    <h1>PAYE Tax Easy</h1>
+    <h2>Code Submission — Software Engineering Practices (IT5030)</h2>
+    <div>
+      <span class="badge">Group 02</span>
+      <span class="badge">SLIIT MSc IT</span>
+      <span class="badge">April 2026</span>
+    </div>
+    <div class="meta">
+      <strong>Module:</strong> Software Engineering Practices (IT5030)<br/>
+      <strong>Submission Type:</strong> Code Submission (10%) — Due 30th April 2026<br/>
+      <strong>Agile Methodology:</strong> Scrum<br/>
+      <strong>Lecturer:</strong> Dr. Sanvitha Kasthuriarachchi
+    </div>
+  </div>
+
+  <!-- Group Members -->
+  <h2 class="section">Group Members</h2>
+  <table>
+    <tr><th>Student ID</th><th>Name</th><th>Role</th></tr>
+    <tr><td>MS26906294</td><td>Perera D.S.M.</td><td>Scrum Master</td></tr>
+    <tr><td>MS26906508</td><td>Fernando G.J.S.</td><td>Backend Developer</td></tr>
+    <tr><td>MS26904214</td><td>Fonseka E.A.R.</td><td>Product Owner</td></tr>
+    <tr><td>MS26900322</td><td>Gallage G.H.G.D.W.</td><td>Tester</td></tr>
+    <tr><td>MS26907802</td><td>Jayasinghe J.A.D.V.D.</td><td>Frontend Developer</td></tr>
+  </table>
+
+  <!-- GitHub Repository Link -->
+  <h2 class="section">GitHub Repository</h2>
+  <div class="github-box">
+    <h3>📁 Source Code Repository</h3>
+    <div class="link">
+      <a href="https://github.com/Malinga5194/paye-tax-easy" target="_blank">
+        https://github.com/Malinga5194/paye-tax-easy
+      </a>
+    </div>
+    <p>The repository contains the complete source code, README, User Guide, migration files, test suite, and all configuration files required to run the system.</p>
+    <p style="margin-top:8px;"><strong>Branch:</strong> main &nbsp;|&nbsp; <strong>Visibility:</strong> Public</p>
+  </div>
+
+  <!-- Technologies Used -->
+  <h2 class="section">Technologies Used</h2>
+  <table>
+    <tr><th>Layer</th><th>Technology</th><th>Purpose</th></tr>
+    <tr><td>Frontend</td><td>React 18 + TypeScript + Vite</td><td>4 portal UIs (Employer, Employee, IRD, Admin)</td></tr>
+    <tr><td>Backend</td><td>.NET Core 8 Web API (C#)</td><td>Business logic, tax engine, REST API</td></tr>
+    <tr><td>Database</td><td>SQL Server LocalDB</td><td>Tax records, payroll, audit logs</td></tr>
+    <tr><td>ORM</td><td>Entity Framework Core 8</td><td>Database access and migrations</td></tr>
+    <tr><td>Authentication</td><td>JWT Bearer (symmetric key)</td><td>Role-based access control</td></tr>
+    <tr><td>PDF Generation</td><td>QuestPDF</td><td>Tax report and deduction history PDFs</td></tr>
+    <tr><td>Password Hashing</td><td>BCrypt.Net</td><td>Secure user password storage</td></tr>
+    <tr><td>Testing</td><td>xUnit + FsCheck</td><td>17 unit + property-based tests</td></tr>
+    <tr><td>Cloud (planned)</td><td>Microsoft Azure</td><td>Hosting, Key Vault, Service Bus</td></tr>
+  </table>
+
+  <!-- Project Setup Instructions -->
+  <h2 class="section">Project Setup Instructions</h2>
+
+  <h3 class="sub">Prerequisites</h3>
+  <table>
+    <tr><th>Tool</th><th>Version</th><th>Download</th></tr>
+    <tr><td>.NET SDK</td><td>8.0 or higher</td><td>https://dotnet.microsoft.com/download/dotnet/8.0</td></tr>
+    <tr><td>Node.js</td><td>20.0 or higher</td><td>https://nodejs.org/</td></tr>
+    <tr><td>SQL Server LocalDB</td><td>Any</td><td>Included with Visual Studio</td></tr>
+    <tr><td>VS Code (optional)</td><td>Latest</td><td>https://code.visualstudio.com/</td></tr>
+    <tr><td>Git</td><td>Latest</td><td>https://git-scm.com/</td></tr>
+  </table>
+
+  <h3 class="sub">Step 1 — Clone the Repository</h3>
+  <pre>git clone https://github.com/Malinga5194/paye-tax-easy.git
+cd paye-tax-easy</pre>
+
+  <h3 class="sub">Step 2 — Open in VS Code</h3>
+  <pre>code .</pre>
+  <p>When prompted, click <strong>"Install All"</strong> to install recommended extensions (C# Dev Kit, ESLint, Prettier).</p>
+
+  <h3 class="sub">Step 3 — Install Frontend Dependencies</h3>
+  <pre>cd frontend/employer-portal &amp;&amp; npm install
+cd ../employee-portal &amp;&amp; npm install
+cd ../ird-dashboard &amp;&amp; npm install
+cd ../admin-portal &amp;&amp; npm install
+cd ../..</pre>
+
+  <h3 class="sub">Step 4 — Run the System</h3>
+  <div class="success">
+    <strong>✅ Recommended — One Script:</strong><br/>
+    In the VS Code terminal, run: <code>.\start.ps1</code><br/><br/>
+    This automatically: creates the database, inserts all test data, starts all 4 portals, and opens the landing page.
+  </div>
+
+  <p style="margin-top:12px;"><strong>Manual (5 terminals):</strong></p>
+  <pre># Terminal 1 — Backend API (creates DB + seeds data on first run)
+dotnet run --project src/PayeTaxEasy.Api --urls "http://localhost:5050" --environment Development
+
+# Terminal 2 — Employer Portal
+cd frontend/employer-portal &amp;&amp; npm run dev
+
+# Terminal 3 — Employee Portal
+cd frontend/employee-portal &amp;&amp; npm run dev
+
+# Terminal 4 — IRD Dashboard
+cd frontend/ird-dashboard &amp;&amp; npm run dev
+
+# Terminal 5 — Admin Portal
+cd frontend/admin-portal &amp;&amp; npm run dev</pre>
+
+  <div class="notice">
+    <strong>⚠ Note:</strong> The database is created and test data is inserted automatically when the API starts for the first time. No manual <code>dotnet ef</code> commands are needed.
+  </div>
+
+  <h3 class="sub">Step 5 — Open in Browser</h3>
+  <table>
+    <tr><th>URL</th><th>Description</th></tr>
+    <tr><td><strong>http://localhost:5173</strong></td><td>Landing Page — start here</td></tr>
+    <tr><td>http://localhost:5050/swagger</td><td>API Documentation (Swagger UI)</td></tr>
+  </table>
+
+  <h3 class="sub">Running Tests</h3>
+  <pre>dotnet test tests/PayeTaxEasy.Tests --verbosity normal</pre>
+  <p>Expected: <strong>17 tests passed</strong> — PAYE tax slab calculations, monthly deduction logic, mid-year adjustment, employment gap handling, dual-employer scenarios.</p>
+
+  <!-- Login Credentials -->
+  <h2 class="section">Login Credentials</h2>
+  <table>
+    <tr><th>Role</th><th>Email</th><th>Password</th><th>Portal</th></tr>
+    <tr><td>Employer / HR</td><td>employer@test.com</td><td>Test@1234</td><td>Employer Portal</td></tr>
+    <tr><td>Employee</td><td>employee@test.com</td><td>Test@1234</td><td>Employee Portal</td></tr>
+    <tr><td>IRD Officer</td><td>ird@test.com</td><td>Test@1234</td><td>IRD Dashboard</td></tr>
+    <tr><td>System Admin</td><td>admin@payetaxeasy.lk</td><td>Admin@1234</td><td>Admin Portal</td></tr>
+  </table>
+
+  <h3 class="sub">Test Employee Accounts (8 Tax Scenarios)</h3>
+  <table>
+    <tr><th>Employee</th><th>Email</th><th>Password</th><th>Scenario</th></tr>
+    <tr><td>Kamal Perera</td><td>kamal.perera@test.com</td><td>Test@1234</td><td>Below tax relief (0%)</td></tr>
+    <tr><td>Nimal Silva</td><td>nimal.silva@test.com</td><td>Test@1234</td><td>6% slab — stable salary</td></tr>
+    <tr><td>Priya Jayasinghe</td><td>priya.jayasinghe@test.com</td><td>Test@1234</td><td>Recently joined Oct 2025</td></tr>
+    <tr><td>Amali Fernando</td><td>amali.fernando@test.com</td><td>Test@1234</td><td>Salary increase mid-year</td></tr>
+    <tr><td>Suresh Bandara</td><td>suresh.bandara@test.com</td><td>Test@1234</td><td>Salary decrease mid-year</td></tr>
+    <tr><td>Roshan Wickrama</td><td>roshan.wickrama@test.com</td><td>Test@1234</td><td>Changed employer (prior IRD data)</td></tr>
+    <tr><td>Dilani Rathnayake</td><td>dilani.rathnayake@test.com</td><td>Test@1234</td><td>Resigned Dec 2025</td></tr>
+    <tr><td>Chamara Dissanayake</td><td>chamara.dissanayake@test.com</td><td>Test@1234</td><td>High earner — 36% slab</td></tr>
+  </table>
+
+  <!-- User Guide -->
+  <h2 class="section">User Guide</h2>
+
+  <h3 class="sub">System Overview</h3>
+  <p>PAYE Tax Easy is a centralized PAYE tax management platform for Sri Lanka. It solves the problem of inaccurate tax deductions when employees change jobs mid-financial-year by connecting employer payroll systems with the IRD.</p>
+  <table style="margin-top:12px;">
+    <tr><th>Portal</th><th>Users</th><th>URL</th></tr>
+    <tr><td>🏢 Employer Portal</td><td>HR / Payroll departments</td><td>http://localhost:5173</td></tr>
+    <tr><td>👤 Employee Portal</td><td>Individual employees</td><td>http://localhost:5174</td></tr>
+    <tr><td>🏛️ IRD Dashboard</td><td>IRD officers</td><td>http://localhost:5175</td></tr>
+    <tr><td>🔐 Admin Portal</td><td>System administrators</td><td>http://localhost:5176</td></tr>
+  </table>
+
+  <h3 class="sub">Employer Portal — Workflow</h3>
+  <ol style="line-height:2.2; padding-left:20px; font-size:10.5pt;">
+    <li>Go to <strong>http://localhost:5173</strong> → click <strong>Employer Portal</strong></li>
+    <li>Login with <code>employer@test.com</code> / <code>Test@1234</code></li>
+    <li>Select a payroll period from the dropdown (April 2025 – March 2026)</li>
+    <li>View the deduction summary table — all employees with annual tax, cumulative paid, remaining tax</li>
+    <li>Click <strong>📋 Fetch IRD &amp; Report</strong> on any employee to:
+      <ul style="margin-top:4px; line-height:2;">
+        <li>Retrieve cumulative IRD deduction history</li>
+        <li>View detailed tax report popup with slab breakdown and adjustment notice</li>
+        <li>Download the report as a PDF</li>
+      </ul>
+    </li>
+    <li>Click <strong>+ Add Employee</strong> to add a new employee salary record</li>
+    <li>Click <strong>Finalize Period</strong> to lock the payroll period</li>
+    <li>Click <strong>Submit to IRD</strong> to file the PAYE return electronically</li>
+  </ol>
+
+  <h3 class="sub">Employee Portal — Workflow</h3>
+  <ol style="line-height:2.2; padding-left:20px; font-size:10.5pt;">
+    <li>Go to <strong>http://localhost:5173</strong> → click <strong>Employee Portal</strong></li>
+    <li>Login with any employee email (e.g. <code>amali.fernando@test.com</code>) / <code>Test@1234</code></li>
+    <li>Select financial year <strong>2025-26</strong></li>
+    <li>View complete monthly PAYE deduction history</li>
+    <li>Click <strong>⬇ Download PDF</strong> to export tax history with the adjustment notice</li>
+  </ol>
+
+  <h3 class="sub">IRD Dashboard — Workflow</h3>
+  <ol style="line-height:2.2; padding-left:20px; font-size:10.5pt;">
+    <li>Go to <strong>http://localhost:5173</strong> → click <strong>IRD Dashboard</strong></li>
+    <li>Login with <code>ird@test.com</code> / <code>Test@1234</code></li>
+    <li>View compliance report — total employers, submitted/not submitted, total PAYE collected</li>
+    <li>Search for a specific employer by registration number</li>
+    <li>Click <strong>Export CSV</strong> to download the compliance report</li>
+    <li>Click <strong>Audit Logs</strong> to view the full audit trail</li>
+  </ol>
+
+  <h3 class="sub">Admin Portal — Workflow</h3>
+  <ol style="line-height:2.2; padding-left:20px; font-size:10.5pt;">
+    <li>Go to <strong>http://localhost:5173</strong> → click <strong>Admin Portal</strong></li>
+    <li>Login with <code>admin@payetaxeasy.lk</code> / <code>Admin@1234</code></li>
+    <li>View all users across all roles</li>
+    <li>Click <strong>+ Create New User</strong> to add Employer, Employee, or IRD Officer accounts</li>
+    <li>Activate / Deactivate users or reset passwords as needed</li>
+  </ol>
+
+  <!-- Tax Scenarios -->
+  <h2 class="section">Test Scenarios — PAYE Tax Calculations</h2>
+
+  <div class="scenario">
+    <h4>Scenario 1 — Below Tax Relief: Kamal Perera</h4>
+    <p>Monthly salary: Rs. 150,000 | Annual income: Rs. 1,800,000 | Tax: Rs. 0 (fully within tax relief) | Monthly deduction: Rs. 0</p>
+  </div>
+  <div class="scenario">
+    <h4>Scenario 2 — 6% Tax Slab: Nimal Silva</h4>
+    <p>Monthly salary: Rs. 250,000 | Annual income: Rs. 3,000,000 | Annual tax: Rs. 96,000 | Monthly deduction: Rs. 8,000</p>
+  </div>
+  <div class="scenario">
+    <h4>Scenario 3 — Recently Joined Mid-Year: Priya Jayasinghe</h4>
+    <p>Joined October 2025 | Monthly salary: Rs. 320,000 | Adjusted deduction calculated for remaining 6 months only</p>
+  </div>
+  <div class="scenario">
+    <h4>Scenario 4 — Salary Increase: Amali Fernando</h4>
+    <p>Apr–Jul 2025: Rs. 200,000/month → Aug 2025–Mar 2026: Rs. 350,000/month | System recalculates from August using actual cumulative income (Rs. 3,600,000 projected annual)</p>
+  </div>
+  <div class="scenario">
+    <h4>Scenario 5 — Salary Decrease: Suresh Bandara</h4>
+    <p>Apr–Aug 2025: Rs. 400,000/month → Sep 2025–Mar 2026: Rs. 280,000/month | System recalculates from September</p>
+  </div>
+  <div class="scenario">
+    <h4>Scenario 6 — Changed Employer: Roshan Wickrama</h4>
+    <p>Prior employer Apr–Oct 2025 at Rs. 500,000/month | Joined this company November 2025 | IRD data loaded showing prior deductions | Adjusted monthly deduction for remaining months</p>
+  </div>
+  <div class="scenario">
+    <h4>Scenario 7 — Resigned Mid-Year: Dilani Rathnayake</h4>
+    <p>Monthly salary: Rs. 180,000 | Resigned December 2025 | Deductions recorded only for active months (Apr–Dec)</p>
+  </div>
+  <div class="scenario">
+    <h4>Scenario 8 — High Earner 36% Slab: Chamara Dissanayake</h4>
+    <p>Monthly salary: Rs. 600,000 | Annual income: Rs. 7,200,000 | Annual tax: Rs. 1,464,000 | Monthly deduction: Rs. 122,000</p>
+  </div>
+
+  <!-- PAYE Tax Rules -->
+  <h2 class="section">PAYE Tax Calculation Rules</h2>
+  <p style="margin-bottom:10px;">Based on the Inland Revenue (Amendment) Act, No. 02 of 2025:</p>
+  <table>
+    <tr><th>Annual Income</th><th>Tax Rate</th><th>Tax Payable</th></tr>
+    <tr><td>Up to Rs. 1,800,000</td><td>0%</td><td>Rs. 0 (Tax Relief)</td></tr>
+    <tr><td>Rs. 1,800,001 – Rs. 2,800,000</td><td>6%</td><td>6% of amount over Rs. 1,800,000</td></tr>
+    <tr><td>Rs. 2,800,001 – Rs. 3,300,000</td><td>18%</td><td>Rs. 60,000 + 18% of amount over Rs. 2,800,000</td></tr>
+    <tr><td>Rs. 3,300,001 – Rs. 3,800,000</td><td>24%</td><td>Rs. 150,000 + 24% of amount over Rs. 3,300,000</td></tr>
+    <tr><td>Rs. 3,800,001 – Rs. 4,300,000</td><td>30%</td><td>Rs. 270,000 + 30% of amount over Rs. 3,800,000</td></tr>
+    <tr><td>Above Rs. 4,300,000</td><td>36%</td><td>Rs. 420,000 + 36% of amount over Rs. 4,300,000</td></tr>
+  </table>
+  <p style="margin-top:12px;"><strong>Monthly deduction</strong> = Annual PAYE tax ÷ 12</p>
+  <p style="margin-top:6px;"><strong>Mid-year adjustment formula:</strong></p>
+  <pre>Adjusted Monthly = (Annual Tax on Projected Income − Prior Deductions) ÷ Remaining Months</pre>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>PAYE Tax Easy | SLIIT MSc IT — Software Engineering Practices (IT5030) | Group 02 | April 2026</p>
+    <p style="margin-top:4px;">GitHub: https://github.com/Malinga5194/paye-tax-easy</p>
+  </div>
+
+</div>
+
+</body>
+</html>
