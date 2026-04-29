@@ -70,13 +70,10 @@ Write-Host "  NOTE: If a port is in use, Vite will pick the next available one."
 Write-Host "        Check the terminal window for the actual URL." -ForegroundColor DarkYellow
 Write-Host ""
 
-# Open browser tabs
+# Open only the landing page in browser
 Start-Sleep -Seconds 4
-Start-Process "http://localhost:5050/swagger"
 Start-Process "http://localhost:5173"
-Start-Process "http://localhost:5174"
-Start-Process "http://localhost:5175"
-Start-Process "http://localhost:5176"
 
-Write-Host "  Browser tabs opened. Press any key to exit this window." -ForegroundColor Green
+Write-Host "  Landing page opened. Select a portal from the home page." -ForegroundColor Green
+Write-Host "  Press any key to exit this window." -ForegroundColor Green
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
