@@ -23,6 +23,7 @@ The current PAYE system has no mechanism for employers to access an employee's p
 | Authentication | JWT Bearer (dev mode — local symmetric key) |
 | PDF Generation | QuestPDF |
 | Email | SendGrid (dev mode — logs to console) |
+| Password Hashing | BCrypt.Net |
 | Testing | xUnit + FsCheck (Property-Based Testing) |
 
 ---
@@ -66,6 +67,9 @@ cd ../employee-portal
 npm install
 
 cd ../ird-dashboard
+npm install
+
+cd ../admin-portal
 npm install
 
 cd ../..
@@ -123,8 +127,22 @@ The system uses dev-mode authentication. Use these credentials:
 | Employer / HR | `employer@test.com` | `Test@1234` |
 | Employee | `employee@test.com` | `Test@1234` |
 | IRD Officer | `ird@test.com` | `Test@1234` |
+| System Admin | `admin@payetaxeasy.lk` | `Admin@1234` |
 
 > Credentials are also shown on each login page.
+
+### Test Employee Accounts (8 scenarios)
+
+| Employee | Email | Password | Scenario |
+|---|---|---|---|
+| Kamal Perera | `kamal.perera@test.com` | `Test@1234` | Below tax relief (0%) |
+| Nimal Silva | `nimal.silva@test.com` | `Test@1234` | 6% slab — stable salary |
+| Priya Jayasinghe | `priya.jayasinghe@test.com` | `Test@1234` | Recently joined mid-year |
+| Amali Fernando | `amali.fernando@test.com` | `Test@1234` | Salary increase mid-year |
+| Suresh Bandara | `suresh.bandara@test.com` | `Test@1234` | Salary decrease mid-year |
+| Roshan Wickrama | `roshan.wickrama@test.com` | `Test@1234` | Changed employer (prior IRD deductions) |
+| Dilani Rathnayake | `dilani.rathnayake@test.com` | `Test@1234` | Resigned mid-year |
+| Chamara Dissanayake | `chamara.dissanayake@test.com` | `Test@1234` | High earner — 36% slab |
 
 ---
 
@@ -195,6 +213,13 @@ Expected output: **17 tests passed** — covering all PAYE tax slab calculations
 4. Search for a specific employer by registration number
 5. Click **Export CSV** to download the report
 6. Click **Audit Logs** to view the full audit trail
+
+### Admin Workflow
+1. Go to http://localhost:5173 → click **Admin Portal**
+2. Login with `admin@payetaxeasy.lk` / `Admin@1234`
+3. View all users across all roles
+4. Click **+ Create New User** to add Employer, Employee, or IRD Officer accounts
+5. Activate / Deactivate users or reset passwords as needed
 
 ---
 
