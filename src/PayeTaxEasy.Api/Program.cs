@@ -114,6 +114,21 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
+// ── Auto-migrate database on startup ─────────────────────────────────────────
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<PayeTaxEasy.Infrastructure.Data.PayeTaxEasyDbContext>();
+    try
+    {
+        db.Database.Migrate();
+        Console.WriteLine("[Startup] Database migration applied successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Startup] Migration warning: {ex.Message}");
+    }
+}
+
 // ── Seed default admin user on startup ───────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {

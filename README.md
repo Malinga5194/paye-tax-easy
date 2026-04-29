@@ -37,13 +37,13 @@ Install the following before running the project:
 | .NET SDK | 8.0 or higher | https://dotnet.microsoft.com/download/dotnet/8.0 |
 | Node.js | 20.0 or higher | https://nodejs.org/ |
 | SQL Server LocalDB | Included with Visual Studio | https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb |
-| EF Core CLI tools | Latest | Run: `dotnet tool install --global dotnet-ef` |
+| VS Code (optional) | Latest | https://code.visualstudio.com/ |
+| Git | Latest | https://git-scm.com/ |
 
-> **Check your versions:**
+> **Verify your installations:**
 > ```powershell
 > dotnet --version    # should show 8.x
 > node --version      # should show 20.x
-> dotnet ef           # should show Entity Framework Core tools
 > ```
 
 ---
@@ -53,11 +53,26 @@ Install the following before running the project:
 ### Step 1 — Clone the repository
 
 ```powershell
-git clone <repository-url>
+git clone https://github.com/Malinga5194/paye-tax-easy.git
 cd paye-tax-easy
 ```
 
-### Step 2 — Install frontend dependencies
+---
+
+### Step 2 — Open in VS Code (recommended)
+
+```powershell
+code .
+```
+
+VS Code will open the project. When prompted **"Install recommended extensions?"** click **Install All**.
+This installs C# Dev Kit, ESLint, and Prettier automatically.
+
+---
+
+### Step 3 — Install frontend dependencies
+
+Open the VS Code terminal (`Ctrl+` ` `) and run:
 
 ```powershell
 cd frontend/employer-portal
@@ -75,52 +90,76 @@ npm install
 cd ../..
 ```
 
-### Step 3 — Create the database
-
-```powershell
-dotnet ef database update --project src/PayeTaxEasy.Infrastructure --startup-project src/PayeTaxEasy.Api
-```
-
-This creates the `PayeTaxEasyDev` database in SQL Server LocalDB with all 10 tables.
-
-> If you see `dotnet ef not found`, run: `dotnet tool install --global dotnet-ef` first.
+---
 
 ### Step 4 — Run the system
 
 **Option A — One script (recommended):**
 
-Right-click `start.ps1` in the project root → **Run with PowerShell**
-
-This starts all services and opens the browser automatically.
-
-**Option B — Manual (4 separate terminals):**
+In the VS Code terminal, run:
 
 ```powershell
-# Terminal 1 — Backend API
-dotnet run --project src/PayeTaxEasy.Api --urls "http://localhost:5050"
+.\start.ps1
+```
+
+Or in File Explorer, right-click `start.ps1` → **Run with PowerShell**
+
+> ✅ The script automatically:
+> - Starts the backend API
+> - **Creates the database and all 10 tables on first run** (no manual steps needed)
+> - **Inserts all test data** — 8 employees covering all tax scenarios, employer, admin user
+> - Starts all 4 frontend portals
+> - Opens the landing page in your browser
+
+**Option B — Manual (5 separate terminals in VS Code):**
+
+```powershell
+# Terminal 1 — Backend API (creates DB + seeds data automatically on first run)
+dotnet run --project src/PayeTaxEasy.Api --urls "http://localhost:5050" --environment Development
 
 # Terminal 2 — Employer Portal
-cd frontend/employer-portal && npm run dev
+cd frontend/employer-portal
+npm run dev
 
 # Terminal 3 — Employee Portal
-cd frontend/employee-portal && npm run dev
+cd frontend/employee-portal
+npm run dev
 
 # Terminal 4 — IRD Dashboard
-cd frontend/ird-dashboard && npm run dev
+cd frontend/ird-dashboard
+npm run dev
+
+# Terminal 5 — Admin Portal
+cd frontend/admin-portal
+npm run dev
 ```
+
+> **Note:** The database is created and test data is inserted automatically when the API starts for the first time. No manual `dotnet ef` commands are needed.
+
+---
 
 ### Step 5 — Open in browser
 
+Open your browser and go to:
+
 | URL | Description |
 |---|---|
-| http://localhost:5173 | **Landing Page** — start here |
+| **http://localhost:5173** | **Landing Page — start here** |
 | http://localhost:5050/swagger | API documentation (Swagger UI) |
 
 ---
 
-## Login Credentials
+### If PowerShell blocks the script
 
-The system uses dev-mode authentication. Use these credentials:
+Run this once in PowerShell, then try `.\start.ps1` again:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+---
+
+## Login Credentials
 
 | Role | Email | Password |
 |---|---|---|
@@ -131,18 +170,18 @@ The system uses dev-mode authentication. Use these credentials:
 
 > Credentials are also shown on each login page.
 
-### Test Employee Accounts (8 scenarios)
+### Test Employee Accounts (8 tax scenarios)
 
 | Employee | Email | Password | Scenario |
 |---|---|---|---|
-| Kamal Perera | `kamal.perera@test.com` | `Test@1234` | Below tax relief (0%) |
-| Nimal Silva | `nimal.silva@test.com` | `Test@1234` | 6% slab — stable salary |
-| Priya Jayasinghe | `priya.jayasinghe@test.com` | `Test@1234` | Recently joined mid-year |
-| Amali Fernando | `amali.fernando@test.com` | `Test@1234` | Salary increase mid-year |
-| Suresh Bandara | `suresh.bandara@test.com` | `Test@1234` | Salary decrease mid-year |
-| Roshan Wickrama | `roshan.wickrama@test.com` | `Test@1234` | Changed employer (prior IRD deductions) |
-| Dilani Rathnayake | `dilani.rathnayake@test.com` | `Test@1234` | Resigned mid-year |
-| Chamara Dissanayake | `chamara.dissanayake@test.com` | `Test@1234` | High earner — 36% slab |
+| Kamal Perera | `kamal.perera@test.com` | `Test@1234` | Below tax relief (0%) — Rs. 150,000/month |
+| Nimal Silva | `nimal.silva@test.com` | `Test@1234` | 6% slab — stable salary Rs. 250,000/month |
+| Priya Jayasinghe | `priya.jayasinghe@test.com` | `Test@1234` | Recently joined Oct 2025 — adjusted deduction |
+| Amali Fernando | `amali.fernando@test.com` | `Test@1234` | Salary increase — Rs. 200k → Rs. 350k from Aug |
+| Suresh Bandara | `suresh.bandara@test.com` | `Test@1234` | Salary decrease — Rs. 400k → Rs. 280k from Sep |
+| Roshan Wickrama | `roshan.wickrama@test.com` | `Test@1234` | Changed employer — prior IRD deductions loaded |
+| Dilani Rathnayake | `dilani.rathnayake@test.com` | `Test@1234` | Resigned Dec 2025 — mid-year exit |
+| Chamara Dissanayake | `chamara.dissanayake@test.com` | `Test@1234` | High earner 36% slab — Rs. 600,000/month |
 
 ---
 
@@ -153,7 +192,8 @@ paye-tax-easy/
 ├── src/
 │   ├── PayeTaxEasy.Api/              # ASP.NET Core 8 Web API
 │   │   ├── Controllers/              # REST API controllers
-│   │   └── Program.cs                # App startup + dev auth endpoint
+│   │   ├── SeedData.cs               # Test data seeding
+│   │   └── Program.cs                # App startup, auth, auto-migration
 │   ├── PayeTaxEasy.Core/             # Domain logic (no dependencies)
 │   │   ├── Calculator/               # PayeCalculator — pure PAYE tax engine
 │   │   ├── Interfaces/               # Service interfaces
@@ -167,9 +207,14 @@ paye-tax-easy/
 │   └── PayeTaxEasy.Tests/
 │       └── Calculator/               # 17 unit + property-based tests
 ├── frontend/
-│   ├── employer-portal/              # React app — Employer/HR interface
-│   ├── employee-portal/              # React app — Employee self-service
-│   └── ird-dashboard/               # React app — IRD compliance dashboard
+│   ├── employer-portal/              # React app (port 5173) — Employer/HR
+│   ├── employee-portal/              # React app (port 5174) — Employee
+│   ├── ird-dashboard/                # React app (port 5175) — IRD Officer
+│   └── admin-portal/                 # React app (port 5176) — System Admin
+├── .vscode/
+│   ├── launch.json                   # VS Code debug configuration
+│   ├── tasks.json                    # VS Code task definitions
+│   └── extensions.json               # Recommended extensions
 ├── start.ps1                         # One-click start script
 ├── stop.ps1                          # Stop all services
 └── README.md
@@ -183,41 +228,45 @@ paye-tax-easy/
 dotnet test tests/PayeTaxEasy.Tests --verbosity normal
 ```
 
-Expected output: **17 tests passed** — covering all PAYE tax slab calculations, monthly deduction logic, mid-year adjustment formula, employment gap handling, and dual-employer scenarios.
+Expected: **17 tests passed** — covering all PAYE tax slab calculations, monthly deduction logic, mid-year adjustment formula, employment gap handling, and dual-employer scenarios.
 
 ---
 
 ## User Guide
 
 ### Employer Workflow
-1. Go to http://localhost:5173 → click **Employer Portal**
+1. Go to **http://localhost:5173** → click **Employer Portal**
 2. Login with `employer@test.com` / `Test@1234`
-3. Select the payroll period
-4. Click **+ Add Employee Salary** — enter employee TIN, gross salary, start date
-5. Click **Fetch IRD** to retrieve the employee's prior deduction history
-6. Review the adjusted monthly deduction (calculated automatically)
-7. Click **Finalize Period** to lock the payroll
-8. Click **Submit to IRD** to file the PAYE return
+3. Select a payroll period from the dropdown (April 2025 – March 2026)
+4. View the deduction summary table showing all 8 test employees
+5. Click **📋 Fetch IRD & Report** on any employee to:
+   - Retrieve their cumulative IRD deduction history
+   - View a detailed tax report popup with slab breakdown
+   - See the adjusted monthly deduction and important notice
+   - Download the report as a PDF
+6. Click **+ Add Employee Salary** to add a new employee
+7. Click **Finalize Period** to lock the payroll period
+8. Click **Submit to IRD** to file the PAYE return electronically
 
 ### Employee Workflow
-1. Go to http://localhost:5173 → click **Employee Portal**
-2. Login with `employee@test.com` / `Test@1234`
-3. Select the financial year
-4. View your complete PAYE deduction history across all employers
-5. Click **⬇ Download PDF** to export your tax history
+1. Go to **http://localhost:5173** → click **Employee Portal**
+2. Login with any employee email (e.g. `amali.fernando@test.com`) / `Test@1234`
+3. Select the financial year **2025-26**
+4. View your complete PAYE deduction history with monthly breakdown
+5. Click **⬇ Download PDF** to export your tax history with the adjustment notice
 
 ### IRD Officer Workflow
-1. Go to http://localhost:5173 → click **IRD Dashboard**
+1. Go to **http://localhost:5173** → click **IRD Dashboard**
 2. Login with `ird@test.com` / `Test@1234`
 3. View compliance report — total employers, submitted/not submitted, total PAYE collected
 4. Search for a specific employer by registration number
-5. Click **Export CSV** to download the report
-6. Click **Audit Logs** to view the full audit trail
+5. Click **Export CSV** to download the compliance report
+6. Click **Audit Logs** to view the full audit trail of all system actions
 
 ### Admin Workflow
-1. Go to http://localhost:5173 → click **Admin Portal**
+1. Go to **http://localhost:5173** → click **Admin Portal**
 2. Login with `admin@payetaxeasy.lk` / `Admin@1234`
-3. View all users across all roles
+3. View all users across all roles with status indicators
 4. Click **+ Create New User** to add Employer, Employee, or IRD Officer accounts
 5. Activate / Deactivate users or reset passwords as needed
 
@@ -247,7 +296,7 @@ Adjusted Monthly = (Annual Tax on Projected Income − Prior Deductions) ÷ Rema
 
 ## Viewing the Database
 
-The database runs on SQL Server LocalDB. To view tables:
+The database is created automatically on first run. To view tables:
 
 1. Open **SQL Server Management Studio (SSMS)**
 2. Connect with:
@@ -262,7 +311,7 @@ The database runs on SQL Server LocalDB. To view tables:
 ```powershell
 .\stop.ps1
 ```
-Or close all 4 terminal windows.
+Or close all terminal windows.
 
 ---
 
