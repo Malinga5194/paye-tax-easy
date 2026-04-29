@@ -59,12 +59,14 @@ public class TaxReportController : ControllerBase
         decimal currentEmployerYTD = deductionsUpTo.Sum(d => d.MonthlyDeductionAmount);
         decimal totalYTD = priorEmployerDeduction + currentEmployerYTD;
 
-        // Calculate remaining months
+        // Calculate remaining months AFTER the selected period
         var fyEnd = new DateTime(2026, 3, 31);
-        int remainingMonths = Math.Max(1, ((fyEnd.Year - periodDate.Year) * 12) + fyEnd.Month - periodDate.Month);
+        int remainingMonths = Math.Max(0, ((fyEnd.Year - periodDate.Year) * 12) + fyEnd.Month - periodDate.Month);
 
-        // Project annual income
-        decimal projectedAnnual = priorEmployerIncome + (payroll.GrossMonthlySalary * 12);
+        // Project annual income:
+        // Actual income earned up to and including selected period + future months at current salary
+        decimal actualIncomeToDate = priorEmployerIncome + deductionsUpTo.Sum(d => d.GrossIncome);
+        decimal projectedAnnual = actualIncomeToDate + (payroll.GrossMonthlySalary * remainingMonths);
         decimal annualTaxLiability = PayeCalculator.CalculateAnnualTax(projectedAnnual);
         decimal remainingTax = Math.Max(0, annualTaxLiability - totalYTD);
         decimal adjustedMonthly = remainingMonths > 0
@@ -153,12 +155,15 @@ public class TaxReportController : ControllerBase
 
         decimal currentYTD = deductionsUpTo.Sum(d => d.MonthlyDeductionAmount);
         decimal totalYTD = priorDeduction + currentYTD;
-        decimal projectedAnnual = priorIncome + (payroll.GrossMonthlySalary * 12);
+        var fyEnd = new DateTime(2026, 3, 31);
+        // Remaining months AFTER the selected period
+        int remainingMonths = Math.Max(0, ((fyEnd.Year - periodDate.Year) * 12) + fyEnd.Month - periodDate.Month);
+        // Actual income earned up to selected period + future months at current salary
+        decimal actualIncomeToDate = priorIncome + deductionsUpTo.Sum(d => d.GrossIncome);
+        decimal projectedAnnual = actualIncomeToDate + (payroll.GrossMonthlySalary * remainingMonths);
         decimal annualTax = PayeCalculator.CalculateAnnualTax(projectedAnnual);
         decimal remainingTax = Math.Max(0, annualTax - totalYTD);
-        var fyEnd = new DateTime(2026, 3, 31);
-        int remainingMonths = Math.Max(1, ((fyEnd.Year - periodDate.Year) * 12) + fyEnd.Month - periodDate.Month);
-        decimal adjustedMonthly = Math.Round(remainingTax / remainingMonths, 0);
+        decimal adjustedMonthly = remainingMonths > 0 ? Math.Round(remainingTax / remainingMonths, 0) : 0;
 
         QuestPDF.Settings.License = LicenseType.Community;
 
