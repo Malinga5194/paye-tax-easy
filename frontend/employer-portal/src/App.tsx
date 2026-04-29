@@ -5,7 +5,7 @@ import HomePage from './pages/HomePage';
 import { getToken } from './api/client';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  return getToken() ? <>{children}</> : <Navigate to="/login" replace />;
+  return getToken() || sessionStorage.getItem('paye_token') ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 export default function App() {

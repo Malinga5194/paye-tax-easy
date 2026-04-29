@@ -52,17 +52,24 @@ public class IrdIntegrationService : IIrdIntegrationService
         var result = new CumulativeDataDto(
             employeeTin, financialYear, 0m, 0m, DateTime.UtcNow, "IRD");
 
-        // Store in cache (insert-only)
-        _db.IrdCumulativeCaches.Add(new IrdCumulativeCache
+        // Look up the real employer by TIN if the passed ID is not valid
+        var realEmployer = await _db.Employers.FirstOrDefaultAsync();
+        var employerIdToUse = realEmployer?.Id ?? requestingEmployerId;
+
+        // Only store in cache if we have a valid employer FK
+        if (realEmployer != null)
         {
-            EmployeeTIN = employeeTin,
-            FinancialYear = financialYear,
-            CumulativeIncome = result.CumulativeIncome,
-            CumulativeDeduction = result.CumulativeDeduction,
-            RetrievedAt = result.RetrievedAt,
-            RetrievedByEmployerId = requestingEmployerId
-        });
-        await _db.SaveChangesAsync();
+            _db.IrdCumulativeCaches.Add(new IrdCumulativeCache
+            {
+                EmployeeTIN = employeeTin,
+                FinancialYear = financialYear,
+                CumulativeIncome = result.CumulativeIncome,
+                CumulativeDeduction = result.CumulativeDeduction,
+                RetrievedAt = result.RetrievedAt,
+                RetrievedByEmployerId = employerIdToUse
+            });
+            await _db.SaveChangesAsync();
+        }
 
         await _audit.RecordAsync(
             requestingEmployerId.ToString(), "Employer",

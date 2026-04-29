@@ -152,6 +152,15 @@ public class PayrollService : IPayrollService
         var employer = await _db.Employers.FirstOrDefaultAsync(e => e.TIN == employerTin)
             ?? throw new KeyNotFoundException($"Employer TIN {employerTin} not found.");
 
+        // Parse period to get the selected month/year
+        if (!DateTime.TryParse($"{period}-01", out var periodDate))
+            periodDate = DateTime.UtcNow;
+
+        // Calculate remaining months in FY from selected period
+        var fyEnd = new DateTime(periodDate.Month >= 4 ? periodDate.Year + 1 : periodDate.Year, 3, 31);
+        int remainingMonths = ((fyEnd.Year - periodDate.Year) * 12) + fyEnd.Month - periodDate.Month + 1;
+        remainingMonths = Math.Max(1, Math.Min(12, remainingMonths));
+
         var payrolls = await _db.EmployeePayrolls
             .Include(p => p.Employee)
             .Include(p => p.MonthlyDeductions)
@@ -160,16 +169,53 @@ public class PayrollService : IPayrollService
 
         return payrolls.Select(p =>
         {
-            var latest = p.MonthlyDeductions.OrderByDescending(d => d.CalculatedAt).FirstOrDefault();
-            decimal ytd = p.MonthlyDeductions.Sum(d => d.MonthlyDeductionAmount);
+            // Get deductions up to and including the selected period
+            var deductionsUpToPeriod = p.MonthlyDeductions
+                .Where(d => d.Year < periodDate.Year ||
+                           (d.Year == periodDate.Year && d.Month <= periodDate.Month))
+                .ToList();
+
+            var latest = deductionsUpToPeriod.OrderByDescending(d => d.CalculatedAt).FirstOrDefault()
+                      ?? p.MonthlyDeductions.OrderByDescending(d => d.CalculatedAt).FirstOrDefault();
+
+            decimal ytd = deductionsUpToPeriod.Sum(d => d.MonthlyDeductionAmount);
+            decimal annualTax = latest?.AnnualTaxLiability ?? 0;
+            decimal remainingTax = Math.Max(0, annualTax - ytd);
             bool hasPrior = p.MonthlyDeductions.Any(d => d.CalculationTrigger == "IRDDataRetrieved");
+
             return new DeductionSummaryDto(
-                p.Employee.TIN, p.Employee.FullName,
+                p.Employee.TIN,
+                p.Employee.FullName,
                 p.GrossMonthlySalary,
                 latest?.MonthlyDeductionAmount ?? 0,
-                ytd, hasPrior,
-                latest?.IsOverpaid ?? false);
+                ytd,
+                hasPrior,
+                latest?.IsOverpaid ?? false,
+                annualTax,
+                remainingTax,
+                remainingMonths,
+                GetScenario(p, periodDate));
         });
+    }
+
+    private static string GetScenario(EmployeePayroll p, DateTime periodDate)
+    {
+        if (p.EmploymentEndDate.HasValue && p.EmploymentEndDate < periodDate)
+            return "Resigned";
+        if (p.EmploymentStartDate > new DateTime(p.EmploymentStartDate.Year, 4, 1))
+            return "Mid-Year Joiner";
+        var deductions = p.MonthlyDeductions.OrderBy(d => d.Year).ThenBy(d => d.Month).ToList();
+        if (deductions.Count > 1)
+        {
+            var salaries = deductions.Select(d => d.GrossIncome).Distinct().ToList();
+            if (salaries.Count > 1)
+            {
+                return deductions.First().GrossIncome < deductions.Last().GrossIncome
+                    ? "Salary Increased"
+                    : "Salary Decreased";
+            }
+        }
+        return "Stable";
     }
 
     public async Task FinalizePeriodAsync(string employerTin, string period)

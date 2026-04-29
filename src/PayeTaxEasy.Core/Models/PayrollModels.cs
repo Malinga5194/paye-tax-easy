@@ -16,7 +16,11 @@ public record DeductionSummaryDto(
     decimal MonthlyDeduction,
     decimal YearToDateCumulativeDeduction,
     bool HasPriorEmployerData,
-    bool IsOverpaid);
+    bool IsOverpaid,
+    decimal AnnualTaxLiability = 0,
+    decimal RemainingTaxForYear = 0,
+    int RemainingMonthsInFY = 0,
+    string Scenario = "");
 
 public record PayrollSubmissionRequestDto(
     string FinancialYear,
