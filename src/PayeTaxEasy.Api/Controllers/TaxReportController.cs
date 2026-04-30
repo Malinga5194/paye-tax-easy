@@ -44,28 +44,47 @@ public class TaxReportController : ControllerBase
         decimal priorEmployerIncome = irdCache?.CumulativeIncome ?? 0;
         decimal priorEmployerDeduction = irdCache?.CumulativeDeduction ?? 0;
 
-        // Use ALL deductions for the full year (consistent regardless of selected month)
         var allDeductions = payroll.MonthlyDeductions
             .OrderBy(d => d.Year).ThenBy(d => d.Month)
             .ToList();
 
-        // Calculate actual total income for the full year (handles salary changes correctly)
-        decimal actualIncome = priorEmployerIncome + allDeductions.Sum(d => d.GrossIncome);
-        decimal annualTaxLiability = PayeCalculator.CalculateAnnualTax(actualIncome);
+        // ═══════════════════════════════════════════════════════════════════
+        // YOUR FORMULA (Chaminda example):
+        // 1. Current salary Rs. 400,000 → annual = Rs. 4,800,000
+        // 2. Annual tax on Rs. 4,800,000 = Rs. 600,000
+        // 3. Standard monthly = Rs. 600,000 / 12 = Rs. 50,000
+        // 4. WITHOUT system: Rs. 50,000 × 8 remaining = Rs. 400,000
+        // 5. WITH system: Rs. 400,000 - Rs. 74,000 (IRD paid) = Rs. 326,000
+        // 6. Adjusted monthly = Rs. 326,000 / 8 = Rs. 40,750
+        // 7. Next FY: Rs. 50,000 (no adjustments)
+        // ═══════════════════════════════════════════════════════════════════
 
-        // Total tax paid so far (all months)
+        decimal annualTaxOnCurrentSalary = PayeCalculator.CalculateAnnualTax(payroll.GrossMonthlySalary * 12);
+        decimal standardMonthly = Math.Round(annualTaxOnCurrentSalary / 12, 0);
+
+        // Remaining months from joining date to end of FY
+        var fyEnd = new DateTime(2026, 3, 31);
+        var joinDate = payroll.EmploymentStartDate;
+        int remainingMonths = ((fyEnd.Year - joinDate.Year) * 12) + fyEnd.Month - joinDate.Month + 1;
+        remainingMonths = Math.Max(1, Math.Min(12, remainingMonths));
+
+        // WITHOUT our system (current broken system)
+        decimal withoutSystemTotal = standardMonthly * remainingMonths;
+        decimal withoutSystemMonthly = standardMonthly;
+
+        // WITH our system (adjusted using cumulative from IRD)
+        decimal withSystemTotal = Math.Max(0, withoutSystemTotal - priorEmployerDeduction);
+        decimal adjustedMonthly = Math.Max(0, Math.Round(withSystemTotal / remainingMonths, 0));
+
+        // Savings for the employee
+        decimal savingsPerMonth = withoutSystemMonthly - adjustedMonthly;
+        decimal totalSavings = savingsPerMonth * remainingMonths;
+
         decimal currentEmployerYTD = allDeductions.Sum(d => d.MonthlyDeductionAmount);
         decimal totalYTD = priorEmployerDeduction + currentEmployerYTD;
-
-        // Remaining months based on active months in the year
-        int totalActiveMonths = allDeductions.Count;
-        int remainingMonths = Math.Max(0, 12 - totalActiveMonths);
-
-        decimal remainingTax = Math.Max(0, annualTaxLiability - totalYTD);
-        decimal adjustedMonthly = remainingMonths > 0
-            ? Math.Round(remainingTax / remainingMonths, 0)
-            : 0;
-        decimal projectedAnnual = actualIncome;
+        decimal annualTaxLiability = annualTaxOnCurrentSalary;
+        decimal remainingTax = Math.Max(0, withSystemTotal - currentEmployerYTD);
+        decimal projectedAnnual = payroll.GrossMonthlySalary * 12;
 
         var report = new
         {
@@ -84,8 +103,16 @@ public class TaxReportController : ControllerBase
 
             // Tax calculation
             annualTaxLiability,
+            standardMonthly,
             taxRelief = 1_800_000m,
             taxableIncome = Math.Max(0, projectedAnnual - 1_800_000m),
+
+            // Comparison: WITHOUT system vs WITH system
+            withoutSystemMonthly,
+            withoutSystemTotal,
+            withSystemTotal,
+            savingsPerMonth,
+            totalSavings,
 
             // Tax slab breakdown
             slabs = GetSlabBreakdown(projectedAnnual),
@@ -143,19 +170,27 @@ public class TaxReportController : ControllerBase
         decimal priorDeduction = irdCache?.CumulativeDeduction ?? 0;
         decimal priorIncome = irdCache?.CumulativeIncome ?? 0;
 
-        // Use ALL deductions for the full year (consistent values)
         var allDeductions = payroll.MonthlyDeductions
             .OrderBy(d => d.Year).ThenBy(d => d.Month).ToList();
 
-        decimal actualIncome = priorIncome + allDeductions.Sum(d => d.GrossIncome);
-        decimal annualTax = PayeCalculator.CalculateAnnualTax(actualIncome);
+        // Same formula as report endpoint
+        decimal annualTax = PayeCalculator.CalculateAnnualTax(payroll.GrossMonthlySalary * 12);
+        decimal standardMonthly = Math.Round(annualTax / 12, 0);
+        var fyEnd = new DateTime(2026, 3, 31);
+        var joinDate = payroll.EmploymentStartDate;
+        int remainingMonths = Math.Max(1, Math.Min(12,
+            ((fyEnd.Year - joinDate.Year) * 12) + fyEnd.Month - joinDate.Month + 1));
+
+        // WITHOUT system vs WITH system
+        decimal withoutSystemTotal = standardMonthly * remainingMonths;
+        decimal withSystemTotal = Math.Max(0, withoutSystemTotal - priorDeduction);
+        decimal adjustedMonthly = Math.Max(0, Math.Round(withSystemTotal / remainingMonths, 0));
+        decimal savingsPerMonth = standardMonthly - adjustedMonthly;
+
         decimal currentYTD = allDeductions.Sum(d => d.MonthlyDeductionAmount);
         decimal totalYTD = priorDeduction + currentYTD;
-        int totalActiveMonths = allDeductions.Count;
-        int remainingMonths = Math.Max(0, 12 - totalActiveMonths);
-        decimal remainingTax = Math.Max(0, annualTax - totalYTD);
-        decimal adjustedMonthly = remainingMonths > 0 ? Math.Round(remainingTax / remainingMonths, 0) : 0;
-        decimal projectedAnnual = actualIncome;
+        decimal remainingTax = Math.Max(0, withSystemTotal - currentYTD);
+        decimal projectedAnnual = payroll.GrossMonthlySalary * 12;
 
         QuestPDF.Settings.License = LicenseType.Community;
 
@@ -225,12 +260,20 @@ public class TaxReportController : ControllerBase
                             if (bold) valueCell.Bold();
                         }
                         Row("Annual Tax Liability", $"Rs. {annualTax:N0}", true, "#003366");
-                        Row("Tax Already Paid (Prior Employer)", $"Rs. {priorDeduction:N0}");
+                        Row("Standard Monthly (without adjustment)", $"Rs. {standardMonthly:N0}");
+                        Row("Remaining Months in FY", remainingMonths.ToString());
+                        Row("", "", false, null);
+                        Row("WITHOUT PAYE Tax Easy:", $"Rs. {standardMonthly:N0} × {remainingMonths} = Rs. {withoutSystemTotal:N0}", false, "#e74c3c");
+                        Row("Less: Cumulative Tax Already Paid (IRD)", $"(Rs. {priorDeduction:N0})", false, "#27ae60");
+                        Row("WITH PAYE Tax Easy:", $"Rs. {withSystemTotal:N0}", true, "#003366");
+                        Row("Adjusted Monthly Deduction (This FY)", $"Rs. {adjustedMonthly:N0}", true, "#17a2b8");
+                        Row("Savings per Month", $"Rs. {savingsPerMonth:N0}", false, "#27ae60");
+                        Row("", "", false, null);
                         Row("Tax Paid (Current Employer YTD)", $"Rs. {currentYTD:N0}");
                         Row("Total Tax Paid to Date", $"Rs. {totalYTD:N0}", true, "#27ae60");
-                        Row("Remaining Tax for Financial Year", $"Rs. {remainingTax:N0}", true, "#e67e22");
-                        Row("Remaining Months in FY", remainingMonths.ToString());
-                        Row("Adjusted Monthly Deduction", $"Rs. {adjustedMonthly:N0}", true, "#003366");
+                        Row("Remaining Tax for FY", $"Rs. {remainingTax:N0}", true, "#e67e22");
+                        Row("", "", false, null);
+                        Row("Next FY Monthly (No Adjustments)", $"Rs. {standardMonthly:N0}", true, "#003366");
                     });
 
                     // Tax Slab Breakdown
@@ -264,34 +307,64 @@ public class TaxReportController : ControllerBase
                     col.Item().PaddingTop(12).Border(1.5f).BorderColor("#f59e0b")
                         .Background("#fffbea").Padding(12).Column(notice =>
                     {
-                        notice.Item().Text("⚠  Important Notice — PAYE Tax Adjustment")
+                        notice.Item().Text("⚠  Important Notice — PAYE Tax Adjustment by PAYE Tax Easy")
                             .Bold().FontSize(11).FontColor("#92400e");
-                        notice.Item().PaddingTop(6).Text(t =>
+
+                        // Comparison: WITHOUT vs WITH
+                        notice.Item().PaddingTop(8).Background("#ffffff").Border(1).BorderColor("#e74c3c").Padding(10).Column(c =>
                         {
-                            t.DefaultTextStyle(s => s.FontSize(9).FontColor("#78350f"));
-                            t.Span("The monthly PAYE deduction for this employee has been ");
-                            t.Span("adjusted").Bold().FontColor("#003366");
-                            t.Span($" based on the cumulative tax already paid during financial year {financialYear}.");
+                            c.Item().Text("❌ WITHOUT PAYE Tax Easy (Current System)").Bold().FontSize(9).FontColor("#e74c3c");
+                            c.Item().PaddingTop(4).Text(t =>
+                            {
+                                t.DefaultTextStyle(s => s.FontSize(9).FontColor("#555555"));
+                                t.Span($"Standard monthly deduction: Rs. {standardMonthly:N0} × {remainingMonths} months = ");
+                                t.Span($"Rs. {withoutSystemTotal:N0}").Bold().FontColor("#e74c3c");
+                                t.Span(" (ignores cumulative tax already paid)");
+                            });
                         });
+
+                        notice.Item().PaddingTop(6).Background("#ffffff").Border(1).BorderColor("#27ae60").Padding(10).Column(c =>
+                        {
+                            c.Item().Text("✅ WITH PAYE Tax Easy (Our Solution)").Bold().FontSize(9).FontColor("#27ae60");
+                            c.Item().PaddingTop(4).Text(t =>
+                            {
+                                t.DefaultTextStyle(s => s.FontSize(9).FontColor("#555555"));
+                                t.Span($"Rs. {withoutSystemTotal:N0} − Rs. {priorDeduction:N0} (already paid) = ");
+                                t.Span($"Rs. {withSystemTotal:N0}").Bold().FontColor("#003366");
+                                t.Span($" ÷ {remainingMonths} months = ");
+                                t.Span($"Rs. {adjustedMonthly:N0}/month").Bold().FontColor("#17a2b8");
+                            });
+                        });
+
+                        if (savingsPerMonth > 0)
+                        {
+                            notice.Item().PaddingTop(6).Background("#d4edda").Padding(8).Text(t =>
+                            {
+                                t.DefaultTextStyle(s => s.FontSize(9).FontColor("#155724"));
+                                t.Span("💰 Employee saves ").Bold();
+                                t.Span($"Rs. {savingsPerMonth:N0} per month").Bold().FontColor("#003366");
+                                t.Span($" (Rs. {savingsPerMonth * remainingMonths:N0} total for remaining {remainingMonths} months)");
+                            });
+                        }
 
                         notice.Item().PaddingTop(8).Row(row =>
                         {
                             row.RelativeItem().Background("#ffffff").Border(1).BorderColor("#fcd34d").Padding(8).Column(c =>
                             {
-                                c.Item().Text("Cumulative Tax Paid to Date").FontSize(8).FontColor("#92400e").Bold();
-                                c.Item().Text($"Rs. {totalYTD:N0}").Bold().FontSize(13).FontColor("#27ae60");
+                                c.Item().Text("Cumulative Tax Already Paid").FontSize(8).FontColor("#92400e").Bold();
+                                c.Item().Text($"Rs. {priorDeduction:N0}").Bold().FontSize(12).FontColor("#27ae60");
                             });
-                            row.ConstantItem(10);
+                            row.ConstantItem(8);
                             row.RelativeItem().Background("#ffffff").Border(1).BorderColor("#fcd34d").Padding(8).Column(c =>
                             {
-                                c.Item().Text("Adjusted Monthly Deduction (This FY)").FontSize(8).FontColor("#92400e").Bold();
-                                c.Item().Text($"Rs. {adjustedMonthly:N0}").Bold().FontSize(13).FontColor("#17a2b8");
+                                c.Item().Text("Adjusted Monthly (This FY)").FontSize(8).FontColor("#92400e").Bold();
+                                c.Item().Text($"Rs. {adjustedMonthly:N0}").Bold().FontSize(12).FontColor("#17a2b8");
                             });
-                            row.ConstantItem(10);
+                            row.ConstantItem(8);
                             row.RelativeItem().Background("#ffffff").Border(1).BorderColor("#fcd34d").Padding(8).Column(c =>
                             {
-                                c.Item().Text("Standard Monthly Deduction (Next FY)").FontSize(8).FontColor("#92400e").Bold();
-                                c.Item().Text($"Rs. {Math.Round(annualTax / 12):N0}").Bold().FontSize(13).FontColor("#003366");
+                                c.Item().Text("Next FY Monthly (No Adjustments)").FontSize(8).FontColor("#92400e").Bold();
+                                c.Item().Text($"Rs. {standardMonthly:N0}").Bold().FontSize(12).FontColor("#003366");
                             });
                         });
 
@@ -304,9 +377,11 @@ public class TaxReportController : ControllerBase
                             t.Span($" will be charged for the remaining ");
                             t.Span($"{remainingMonths} month{(remainingMonths != 1 ? "s" : "")}").Bold().FontColor("#003366");
                             t.Span($" of the current financial year ({financialYear}). ");
-                            t.Span("From the next financial year onwards, the standard monthly deduction of ");
-                            t.Span($"Rs. {Math.Round(annualTax / 12):N0}").Bold().FontColor("#003366");
-                            t.Span(" will apply, calculated fresh without considering prior cumulative payments.");
+                            t.Span("From the next financial year, ");
+                            t.Span("no adjustments will be applied").Bold();
+                            t.Span(" — the standard monthly deduction of ");
+                            t.Span($"Rs. {standardMonthly:N0}").Bold().FontColor("#003366");
+                            t.Span(" will be charged fresh based on the employee's current salary.");
                         });
                     });
 

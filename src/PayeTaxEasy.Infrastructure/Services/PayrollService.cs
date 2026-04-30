@@ -167,7 +167,6 @@ public class PayrollService : IPayrollService
 
         return payrolls.Select(p =>
         {
-            // Use ALL deductions for the full year (consistent regardless of selected month)
             var allDeductions = p.MonthlyDeductions
                 .OrderBy(d => d.Year).ThenBy(d => d.Month).ToList();
 
@@ -176,34 +175,52 @@ public class PayrollService : IPayrollService
                 .Where(c => c.EmployeeTIN == p.Employee.TIN)
                 .OrderByDescending(c => c.RetrievedAt)
                 .FirstOrDefault();
-            decimal priorIncome = irdData?.CumulativeIncome ?? 0;
             decimal priorDeduction = irdData?.CumulativeDeduction ?? 0;
 
-            // Calculate actual total income for the year (handles salary changes)
-            decimal actualIncome = priorIncome + allDeductions.Sum(d => d.GrossIncome);
-            decimal annualTax = PayeCalculator.CalculateAnnualTax(actualIncome);
+            // ═══════════════════════════════════════════════════════════════════
+            // YOUR FORMULA:
+            // Step 1: Standard monthly = AnnualTax(currentSalary × 12) / 12
+            // Step 2: Tax for remaining months = Standard monthly × remaining months
+            // Step 3: Adjusted monthly = (Tax for remaining months − cumulative paid) / remaining months
+            // Step 4: Next FY = Standard monthly (no adjustments)
+            // ═══════════════════════════════════════════════════════════════════
 
-            // Total tax paid so far
-            decimal totalPaid = priorDeduction + allDeductions.Sum(d => d.MonthlyDeductionAmount);
-            decimal remainingTax = Math.Max(0, annualTax - totalPaid);
+            // Standard monthly based on CURRENT salary (as if full year)
+            decimal annualTaxOnCurrentSalary = PayeCalculator.CalculateAnnualTax(p.GrossMonthlySalary * 12);
+            decimal standardMonthly = Math.Round(annualTaxOnCurrentSalary / 12, 0);
 
-            // Remaining months from joining date (not from selected period)
+            // Remaining months in FY from joining date
             var fyEnd = new DateTime(2026, 3, 31);
-            int totalActiveMonths = allDeductions.Count;
-            int remainingMonths = Math.Max(0, 12 - totalActiveMonths);
+            var joinDate = p.EmploymentStartDate;
+            int remainingMonths = ((fyEnd.Year - joinDate.Year) * 12) + fyEnd.Month - joinDate.Month + 1;
+            remainingMonths = Math.Max(1, Math.Min(12, remainingMonths));
 
-            // Monthly deduction — use the latest calculated value
-            var latest = allDeductions.LastOrDefault();
-            bool hasPrior = allDeductions.Any(d => d.CalculationTrigger == "IRDDataRetrieved") || priorDeduction > 0;
+            // Tax employer would charge for remaining months (without our system)
+            decimal taxForRemainingMonths = standardMonthly * remainingMonths;
+
+            // Adjusted monthly = (taxForRemainingMonths − already paid) / remaining months
+            decimal adjustedMonthly = Math.Max(0, Math.Round((taxForRemainingMonths - priorDeduction) / remainingMonths, 0));
+
+            // Total tax paid so far (prior + what we've charged)
+            decimal totalPaid = priorDeduction + allDeductions.Sum(d => d.MonthlyDeductionAmount);
+
+            // Annual tax liability = standard monthly × 12 (based on current salary)
+            decimal annualTax = annualTaxOnCurrentSalary;
+
+            // Remaining tax = what's left to collect this FY
+            decimal remainingTax = Math.Max(0, taxForRemainingMonths - priorDeduction - allDeductions.Sum(d => d.MonthlyDeductionAmount));
+
+            bool hasPrior = priorDeduction > 0;
+            bool isOverpaid = priorDeduction >= taxForRemainingMonths;
 
             return new DeductionSummaryDto(
                 p.Employee.TIN,
                 p.Employee.FullName,
                 p.GrossMonthlySalary,
-                latest?.MonthlyDeductionAmount ?? 0,
+                adjustedMonthly,
                 totalPaid,
                 hasPrior,
-                latest?.IsOverpaid ?? false,
+                isOverpaid,
                 annualTax,
                 remainingTax,
                 remainingMonths,

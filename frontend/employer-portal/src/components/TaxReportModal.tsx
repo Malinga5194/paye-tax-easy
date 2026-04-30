@@ -88,16 +88,33 @@ export default function TaxReportModal({ report, period, onClose }: Props) {
             <InfoBox label="TIN" value={report.employeeTIN} />
             <InfoBox label="Employer" value={report.employerName} />
             <InfoBox label="Gross Monthly Salary" value={`Rs. ${report.grossMonthlySalary.toLocaleString()}`} />
-            <InfoBox label="Projected Annual Income" value={`Rs. ${report.projectedAnnualIncome.toLocaleString()}`} />
+            <InfoBox label="Projected Annual Income (Salary × 12)" value={`Rs. ${report.projectedAnnualIncome.toLocaleString()}`} />
             <InfoBox label="Tax Relief" value="Rs. 1,800,000" />
+            <InfoBox label="Joining Date" value={report.joiningDate ? new Date(report.joiningDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'} />
+            <InfoBox label="Remaining Months in FY" value={`${report.remainingMonthsInFY} months`} />
+            <InfoBox label="Standard Monthly (No Adjustment)" value={`Rs. ${(report.standardMonthly || Math.round(report.annualTaxLiability / 12)).toLocaleString()}`} />
+          </div>
+
+          {/* Calculation Breakdown */}
+          <div style={{ background: '#e8f0fb', border: '1px solid #003366', borderRadius: '8px', padding: '16px', marginBottom: '1.5rem' }}>
+            <h4 style={{ margin: '0 0 10px', color: '#003366' }}>📐 Tax Calculation Breakdown</h4>
+            <table style={{ width: '100%', fontSize: '0.9rem' }}>
+              <tbody>
+                <tr><td style={{ padding: '4px 0' }}>① Standard monthly deduction (based on current salary)</td><td style={{ textAlign: 'right', fontWeight: 600 }}>Rs. {(report.standardMonthly || Math.round(report.annualTaxLiability / 12)).toLocaleString()}</td></tr>
+                <tr><td style={{ padding: '4px 0' }}>② Tax for remaining {report.remainingMonthsInFY} months (① × {report.remainingMonthsInFY})</td><td style={{ textAlign: 'right', fontWeight: 600 }}>Rs. {(report.taxForRemainingMonths || (Math.round(report.annualTaxLiability / 12) * report.remainingMonthsInFY)).toLocaleString()}</td></tr>
+                <tr><td style={{ padding: '4px 0' }}>③ Cumulative tax already paid (from IRD)</td><td style={{ textAlign: 'right', fontWeight: 600, color: '#27ae60' }}>− Rs. {report.priorEmployerDeduction.toLocaleString()}</td></tr>
+                <tr style={{ borderTop: '2px solid #003366' }}><td style={{ padding: '6px 0', fontWeight: 700 }}>④ Remaining tax to collect (② − ③)</td><td style={{ textAlign: 'right', fontWeight: 700, color: '#e67e22' }}>Rs. {((report.taxForRemainingMonths || (Math.round(report.annualTaxLiability / 12) * report.remainingMonthsInFY)) - report.priorEmployerDeduction).toLocaleString()}</td></tr>
+                <tr><td style={{ padding: '6px 0', fontWeight: 700, color: '#003366' }}>⑤ Adjusted monthly deduction (④ ÷ {report.remainingMonthsInFY})</td><td style={{ textAlign: 'right', fontWeight: 700, color: '#17a2b8', fontSize: '1.1rem' }}>Rs. {report.adjustedMonthlyDeduction.toLocaleString()}</td></tr>
+              </tbody>
+            </table>
           </div>
 
           {/* Tax Summary Cards */}
           <div style={styles.summaryCards}>
-            <TaxCard label="Annual Tax Liability" value={report.annualTaxLiability} color="#003366" icon="📊" />
+            <TaxCard label="Annual Tax (Current Salary)" value={report.annualTaxLiability} color="#003366" icon="📊" />
             <TaxCard label="Total Tax Paid to Date" value={report.totalTaxPaidToDate} color="#27ae60" icon="✓" />
             <TaxCard label="Remaining Tax for FY" value={report.remainingTaxForYear} color="#e67e22" icon="⏳" />
-            <TaxCard label="Adjusted Monthly Deduction" value={report.adjustedMonthlyDeduction} color="#17a2b8" icon="💰" />
+            <TaxCard label="Adjusted Monthly (This FY)" value={report.adjustedMonthlyDeduction} color="#17a2b8" icon="💰" />
           </div>
 
           {/* Progress Bar */}
