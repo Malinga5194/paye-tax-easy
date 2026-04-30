@@ -113,23 +113,8 @@ export default function TaxReportModal({ report, period, onClose }: Props) {
           <div style={styles.summaryCards}>
             <TaxCard label="Annual Tax (Current Salary)" value={report.annualTaxLiability} color="#003366" icon="📊" />
             <TaxCard label="Total Tax Paid to Date" value={report.totalTaxPaidToDate} color="#27ae60" icon="✓" />
-            <TaxCard label="Remaining Tax for FY" value={report.remainingTaxForYear} color="#e67e22" icon="⏳" />
+            <TaxCard label="Tax to Collect (This Employer)" value={report.remainingTaxForYear} color="#e67e22" icon="⏳" />
             <TaxCard label="Adjusted Monthly (This FY)" value={report.adjustedMonthlyDeduction} color="#17a2b8" icon="💰" />
-          </div>
-
-          {/* Progress Bar */}
-          <div style={styles.progressSection}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span style={{ fontWeight: 600, color: '#333' }}>Tax Payment Progress</span>
-              <span style={{ fontWeight: 700, color: '#003366' }}>{pct}% paid</span>
-            </div>
-            <div style={styles.progressBg}>
-              <div style={{ ...styles.progressFill, width: `${pct}%` }} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '0.8rem', color: '#666' }}>
-              <span>Rs. {report.totalTaxPaidToDate.toLocaleString()} paid</span>
-              <span>Rs. {report.remainingTaxForYear.toLocaleString()} remaining ({report.remainingMonthsInFY} months)</span>
-            </div>
           </div>
 
           {/* Prior Employer Section */}

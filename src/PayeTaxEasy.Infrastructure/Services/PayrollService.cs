@@ -198,8 +198,11 @@ public class PayrollService : IPayrollService
             // Tax employer would charge for remaining months (without our system)
             decimal taxForRemainingMonths = standardMonthly * remainingMonths;
 
-            // Adjusted monthly = (taxForRemainingMonths − already paid) / remaining months
-            decimal adjustedMonthly = Math.Max(0, Math.Round((taxForRemainingMonths - priorDeduction) / remainingMonths, 0));
+            // WITH our system: deduct cumulative already paid
+            decimal withSystemTotal = Math.Max(0, taxForRemainingMonths - priorDeduction);
+
+            // Adjusted monthly = withSystemTotal / remaining months
+            decimal adjustedMonthly = Math.Max(0, Math.Round(withSystemTotal / remainingMonths, 0));
 
             // Total tax paid so far (prior + what we've charged)
             decimal totalPaid = priorDeduction + allDeductions.Sum(d => d.MonthlyDeductionAmount);
@@ -207,8 +210,8 @@ public class PayrollService : IPayrollService
             // Annual tax liability = standard monthly × 12 (based on current salary)
             decimal annualTax = annualTaxOnCurrentSalary;
 
-            // Remaining tax = what's left to collect this FY
-            decimal remainingTax = Math.Max(0, taxForRemainingMonths - priorDeduction - allDeductions.Sum(d => d.MonthlyDeductionAmount));
+            // Remaining tax = what this employer needs to collect for this FY
+            decimal remainingTax = Math.Max(0, withSystemTotal);
 
             bool hasPrior = priorDeduction > 0;
             bool isOverpaid = priorDeduction >= taxForRemainingMonths;

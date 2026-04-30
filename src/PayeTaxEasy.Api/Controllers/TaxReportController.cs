@@ -83,7 +83,8 @@ public class TaxReportController : ControllerBase
         decimal currentEmployerYTD = allDeductions.Sum(d => d.MonthlyDeductionAmount);
         decimal totalYTD = priorEmployerDeduction + currentEmployerYTD;
         decimal annualTaxLiability = annualTaxOnCurrentSalary;
-        decimal remainingTax = Math.Max(0, withSystemTotal - currentEmployerYTD);
+        // Remaining tax = what this employer needs to collect for this FY (the adjusted total)
+        decimal remainingTax = withSystemTotal;
         decimal projectedAnnual = payroll.GrossMonthlySalary * 12;
 
         var report = new
