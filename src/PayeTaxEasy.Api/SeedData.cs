@@ -228,24 +228,38 @@ public static class SeedData
                     });
                 }
 
-                // ── Generate monthly deductions using ACTUAL cumulative method ──
-                decimal cumIncome = s.PriorIncome;
+                // ── Generate monthly deductions using YOUR FORMULA ──────────────
+                // Standard monthly = AnnualTax(currentSalary × 12) / 12
+                // Adjusted monthly = (standardMonthly × remainingMonths - priorDeduction) / remainingMonths
+                // Same adjusted amount every month (not recalculated)
+
+                decimal currentSalary = s.MonthlySalaries.Last().salary;
+                decimal annualTaxOnSalary = PayeCalculator.CalculateAnnualTax(currentSalary * 12);
+                decimal standardMonthly = Math.Round(annualTaxOnSalary / 12, 0);
+                int totalRemainingMonths = s.MonthlySalaries.Length;
+                decimal withoutSystemTotal = standardMonthly * totalRemainingMonths;
+                decimal withSystemTotal = Math.Max(0, withoutSystemTotal - s.PriorDeduction);
+                decimal adjustedMonthly = Math.Max(0, Math.Round(withSystemTotal / totalRemainingMonths, 0));
+
                 decimal cumDeduction = s.PriorDeduction;
-                int totalMonthsInFY = 12;
 
                 for (int i = 0; i < s.MonthlySalaries.Length; i++)
                 {
                     var (month, salary) = s.MonthlySalaries[i];
                     int year = month >= 4 ? 2025 : 2026;
-                    int remainingMonths = s.MonthlySalaries.Length - i;
 
-                    // Project annual income: actual income so far + remaining months at current salary
-                    decimal projectedAnnual = cumIncome + salary + (salary * (remainingMonths - 1));
-                    decimal annualTax = PayeCalculator.CalculateAnnualTax(projectedAnnual);
-
-                    // Adjusted monthly: (annual tax - already paid) / remaining months
-                    decimal monthlyDeduction = PayeCalculator.CalculateAdjustedDeduction(
-                        projectedAnnual, cumDeduction, remainingMonths);
+                    // For employees with salary changes mid-year, recalculate when salary changes
+                    if (i > 0 && salary != s.MonthlySalaries[i - 1].salary)
+                    {
+                        int newRemaining = s.MonthlySalaries.Length - i;
+                        decimal newAnnualTax = PayeCalculator.CalculateAnnualTax(salary * 12);
+                        decimal newStdMonthly = Math.Round(newAnnualTax / 12, 0);
+                        decimal newWithout = newStdMonthly * newRemaining;
+                        decimal newWith = Math.Max(0, newWithout - cumDeduction);
+                        adjustedMonthly = Math.Max(0, Math.Round(newWith / newRemaining, 0));
+                        annualTaxOnSalary = newAnnualTax;
+                        standardMonthly = newStdMonthly;
+                    }
 
                     db.MonthlyDeductions.Add(new MonthlyDeduction
                     {
@@ -253,18 +267,17 @@ public static class SeedData
                         EmployeePayrollId = payroll.Id,
                         Month = month, Year = year,
                         GrossIncome = salary,
-                        AnnualTaxLiability = annualTax,
-                        MonthlyDeductionAmount = monthlyDeduction,
+                        AnnualTaxLiability = annualTaxOnSalary,
+                        MonthlyDeductionAmount = adjustedMonthly,
                         CumulativeDeductionAtCalculation = cumDeduction,
-                        RemainingMonthsAtCalculation = remainingMonths,
+                        RemainingMonthsAtCalculation = s.MonthlySalaries.Length - i,
                         CalculationTrigger = i == 0 ? "InitialEntry" : "Recalculation",
                         IsOverpaid = false,
                         IsLocked = true,
                         CalculatedAt = new DateTime(year, month, 15)
                     });
 
-                    cumIncome += salary;
-                    cumDeduction += monthlyDeduction;
+                    cumDeduction += adjustedMonthly;
                 }
             }
 
