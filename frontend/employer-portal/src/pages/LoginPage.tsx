@@ -40,10 +40,6 @@ export default function LoginPage() {
             <p style={styles.cardSubtitle}>Manage payroll and PAYE deductions</p>
           </div>
           <div style={styles.cardBody}>
-            <div style={styles.hint}>
-              <strong>Dev credentials:</strong><br />
-              Email: <code>employer@test.com</code> &nbsp;|&nbsp; Password: <code>Test@1234</code>
-            </div>
             <form onSubmit={handleLogin}>
               <div style={styles.field}>
                 <label style={styles.label}>Email Address</label>

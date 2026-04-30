@@ -44,10 +44,6 @@ export default function LoginPage() {
             <p style={styles.cardSubtitle}>User management and system administration</p>
           </div>
           <div style={styles.cardBody}>
-            <div style={{ ...styles.hint, background: '#fdecea', border: '1px solid #ef9a9a', color: '#b71c1c' }}>
-              <strong>Default admin credentials:</strong><br />
-              Email: <code>admin@payetaxeasy.lk</code> &nbsp;|&nbsp; Password: <code>Admin@1234</code>
-            </div>
             <form onSubmit={handleLogin}>
               <div style={styles.field}>
                 <label style={styles.label}>Email Address</label>

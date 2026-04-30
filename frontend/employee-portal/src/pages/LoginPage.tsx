@@ -40,10 +40,6 @@ export default function LoginPage() {
             <p style={styles.cardSubtitle}>View your PAYE deduction history</p>
           </div>
           <div style={styles.cardBody}>
-            <div style={{ ...styles.hint, background: '#e8f5e9', border: '1px solid #a5d6a7', color: '#1b5e20' }}>
-              <strong>Dev credentials:</strong><br />
-              Email: <code>employee@test.com</code> &nbsp;|&nbsp; Password: <code>Test@1234</code>
-            </div>
             <form onSubmit={handleLogin}>
               <div style={styles.field}>
                 <label style={styles.label}>Email Address</label>

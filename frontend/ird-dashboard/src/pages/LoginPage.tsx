@@ -40,10 +40,6 @@ export default function LoginPage() {
             <p style={styles.cardSubtitle}>Compliance monitoring and audit management</p>
           </div>
           <div style={styles.cardBody}>
-            <div style={{ ...styles.hint, background: '#f3e5f5', border: '1px solid #ce93d8', color: '#4a148c' }}>
-              <strong>Dev credentials:</strong><br />
-              Email: <code>ird@test.com</code> &nbsp;|&nbsp; Password: <code>Test@1234</code>
-            </div>
             <form onSubmit={handleLogin}>
               <div style={styles.field}>
                 <label style={styles.label}>Email Address</label>
