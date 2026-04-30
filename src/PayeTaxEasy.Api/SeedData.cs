@@ -350,8 +350,93 @@ public static class SeedData
             // Employee E (Eranga) — worked at Company X for Apr-Jun at Rs. 350,000
             AddPriorEmployment(companyX.Id, "100000005", 350_000m, 4, 6, "PriorEmployer");
 
+            // ═══════════════════════════════════════════════════════════════════
+            // PAYROLL SUBMISSIONS — for IRD Compliance Dashboard
+            // ═══════════════════════════════════════════════════════════════════
+
+            // Company Y (ABC Company) — submitted monthly returns Apr-Dec 2025
+            for (int m = 4; m <= 12; m++)
+            {
+                var submission = new PayrollSubmission
+                {
+                    Id = Guid.NewGuid(),
+                    EmployerId = companyY.Id,
+                    FinancialYear = FY,
+                    Status = "Accepted",
+                    IRDReferenceNumber = $"IRD-2025-{m:D2}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
+                    TotalPAYEAmount = 200_000m + (m * 5_000m), // varying amounts
+                    SubmittedAt = new DateTime(2025, m, 14),
+                    IRDAcceptedAt = new DateTime(2025, m, 15)
+                };
+                db.PayrollSubmissions.Add(submission);
+            }
+
+            // Company X (XYZ Holdings) — submitted Apr-Jul 2025
+            for (int m = 4; m <= 7; m++)
+            {
+                db.PayrollSubmissions.Add(new PayrollSubmission
+                {
+                    Id = Guid.NewGuid(),
+                    EmployerId = companyX.Id,
+                    FinancialYear = FY,
+                    Status = "Accepted",
+                    IRDReferenceNumber = $"IRD-2025-{m:D2}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
+                    TotalPAYEAmount = 50_000m + (m * 2_000m),
+                    SubmittedAt = new DateTime(2025, m, 14),
+                    IRDAcceptedAt = new DateTime(2025, m, 15)
+                });
+            }
+
+            // Company Z (Lanka Tech) — submitted Apr-Aug 2025
+            for (int m = 4; m <= 8; m++)
+            {
+                db.PayrollSubmissions.Add(new PayrollSubmission
+                {
+                    Id = Guid.NewGuid(),
+                    EmployerId = companyZ.Id,
+                    FinancialYear = FY,
+                    Status = "Accepted",
+                    IRDReferenceNumber = $"IRD-2025-{m:D2}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
+                    TotalPAYEAmount = 8_000m,
+                    SubmittedAt = new DateTime(2025, m, 14),
+                    IRDAcceptedAt = new DateTime(2025, m, 15)
+                });
+            }
+
+            // ═══════════════════════════════════════════════════════════════════
+            // AUDIT LOGS — for IRD Audit Log viewer
+            // ═══════════════════════════════════════════════════════════════════
+            var auditActions = new[]
+            {
+                ("200000001", "Employer", "SalaryAdded", "EmployeePayroll", "100000001", new DateTime(2025, 4, 1)),
+                ("200000001", "Employer", "SalaryAdded", "EmployeePayroll", "100000002", new DateTime(2025, 4, 1)),
+                ("200000001", "Employer", "SalaryAdded", "EmployeePayroll", "100000003", new DateTime(2025, 8, 1)),
+                ("200000001", "Employer", "IRDDataRetrieved", "Employee", "100000003", new DateTime(2025, 8, 1)),
+                ("200000001", "Employer", "PayrollSubmitted", "PayrollSubmission", FY, new DateTime(2025, 4, 14)),
+                ("200000001", "Employer", "PayrollSubmitted", "PayrollSubmission", FY, new DateTime(2025, 5, 14)),
+                ("200000001", "Employer", "PayrollSubmitted", "PayrollSubmission", FY, new DateTime(2025, 6, 14)),
+                ("200000001", "Employer", "PayrollSubmitted", "PayrollSubmission", FY, new DateTime(2025, 7, 14)),
+                ("200000001", "Employer", "PayrollSubmitted", "PayrollSubmission", FY, new DateTime(2025, 8, 14)),
+                ("200000001", "Employer", "PeriodFinalized", "PayrollPeriod", "2025-04", new DateTime(2025, 4, 14)),
+                ("200000001", "Employer", "PeriodFinalized", "PayrollPeriod", "2025-05", new DateTime(2025, 5, 14)),
+                ("100000003", "Employee", "PDFExported", "DeductionHistory", "100000003", new DateTime(2025, 9, 10)),
+                ("100000005", "Employee", "PDFExported", "DeductionHistory", "100000005", new DateTime(2025, 11, 5)),
+                ("300000001", "IRD_Officer", "ComplianceReportExported", "ComplianceReport", FY, new DateTime(2025, 10, 1)),
+                ("400000002", "SystemAdmin", "UserCreated", "AppUser", "100000003", new DateTime(2025, 8, 1)),
+            };
+
+            foreach (var (actorId, role, action, entityType, entityId, timestamp) in auditActions)
+            {
+                db.AuditLogs.Add(new AuditLog
+                {
+                    ActorId = actorId, ActorRole = role, Action = action,
+                    EntityType = entityType, EntityId = entityId,
+                    FinancialYear = FY, Timestamp = timestamp
+                });
+            }
+
             db.SaveChanges();
-            Console.WriteLine("[SeedData] Successfully seeded 8 employees with 3 employers and realistic PAYE scenarios.");
+            Console.WriteLine("[SeedData] Successfully seeded 8 employees, 3 employers, submissions, and audit logs.");
         }
         catch (Exception ex)
         {
