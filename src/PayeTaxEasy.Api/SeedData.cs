@@ -19,7 +19,7 @@ public static class SeedData
             const string FY = "2025-26";
             const string PWD = "Test@1234";
 
-            // ── Two Employers ─────────────────────────────────────────────────
+            // ── Three Employers ────────────────────────────────────────────────
             var companyY = new Employer
             {
                 Id = Guid.NewGuid(), TIN = "200000001",
@@ -29,7 +29,25 @@ public static class SeedData
             };
             db.Employers.Add(companyY);
 
-            // Employer login
+            var companyX = new Employer
+            {
+                Id = Guid.NewGuid(), TIN = "200000002",
+                OrganizationName = "XYZ Holdings (Company X)",
+                RegistrationNumber = "REG002", ContactEmail = "hr@xyzholdings.lk",
+                ContactPhone = "+94112345679", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            };
+            db.Employers.Add(companyX);
+
+            var companyZ = new Employer
+            {
+                Id = Guid.NewGuid(), TIN = "200000003",
+                OrganizationName = "Lanka Tech Solutions (Company Z)",
+                RegistrationNumber = "REG003", ContactEmail = "hr@lankatech.lk",
+                ContactPhone = "+94112345680", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            };
+            db.Employers.Add(companyZ);
+
+            // Employer login (Company Y only — the current employer)
             db.AppUsers.Add(new AppUser
             {
                 Email = "employer@test.com",
@@ -281,8 +299,59 @@ public static class SeedData
                 }
             }
 
+            // ═══════════════════════════════════════════════════════════════════
+            // PRIOR EMPLOYER RECORDS — for tax history display
+            // These show what each employee earned and paid at their previous employer
+            // ═══════════════════════════════════════════════════════════════════
+
+            // Helper to create prior employer payroll + monthly deductions
+            void AddPriorEmployment(Guid employerId, string employeeTin, decimal monthlySalary,
+                int startMonth, int endMonth, string trigger)
+            {
+                var employee = db.Employees.Local.First(e => e.TIN == employeeTin);
+                decimal annualTax = PayeCalculator.CalculateAnnualTax(monthlySalary * 12);
+                decimal stdMonthly = Math.Round(annualTax / 12, 0);
+
+                var priorPayroll = new EmployeePayroll
+                {
+                    Id = Guid.NewGuid(), EmployerId = employerId, EmployeeId = employee.Id,
+                    GrossMonthlySalary = monthlySalary,
+                    EmploymentStartDate = new DateTime(2025, startMonth, 1),
+                    EmploymentEndDate = new DateTime(2025, endMonth, 28),
+                    EffectiveDate = new DateTime(2025, startMonth, 1),
+                    IsActive = false, CreatedAt = DateTime.UtcNow
+                };
+                db.EmployeePayrolls.Add(priorPayroll);
+
+                decimal cumDed = 0;
+                for (int m = startMonth; m <= endMonth; m++)
+                {
+                    db.MonthlyDeductions.Add(new MonthlyDeduction
+                    {
+                        Id = Guid.NewGuid(), EmployeePayrollId = priorPayroll.Id,
+                        Month = m, Year = 2025, GrossIncome = monthlySalary,
+                        AnnualTaxLiability = annualTax,
+                        MonthlyDeductionAmount = stdMonthly,
+                        CumulativeDeductionAtCalculation = cumDed,
+                        RemainingMonthsAtCalculation = 12 - m + 4,
+                        CalculationTrigger = trigger, IsOverpaid = false, IsLocked = true,
+                        CalculatedAt = new DateTime(2025, m, 15)
+                    });
+                    cumDed += stdMonthly;
+                }
+            }
+
+            // Employee C (Chaminda) — worked at Company X for Apr-Jul at Rs. 300,000
+            AddPriorEmployment(companyX.Id, "100000003", 300_000m, 4, 7, "PriorEmployer");
+
+            // Employee D (Dilini) — worked at Company Z for Apr-Aug at Rs. 250,000
+            AddPriorEmployment(companyZ.Id, "100000004", 250_000m, 4, 8, "PriorEmployer");
+
+            // Employee E (Eranga) — worked at Company X for Apr-Jun at Rs. 350,000
+            AddPriorEmployment(companyX.Id, "100000005", 350_000m, 4, 6, "PriorEmployer");
+
             db.SaveChanges();
-            Console.WriteLine("[SeedData] Successfully seeded 8 employees with realistic PAYE scenarios.");
+            Console.WriteLine("[SeedData] Successfully seeded 8 employees with 3 employers and realistic PAYE scenarios.");
         }
         catch (Exception ex)
         {

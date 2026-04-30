@@ -48,6 +48,14 @@ public class TaxReportController : ControllerBase
             .OrderBy(d => d.Year).ThenBy(d => d.Month)
             .ToList();
 
+        // ALL deductions across ALL employers for this employee (for history display)
+        var allEmployerDeductions = await _db.MonthlyDeductions
+            .Include(d => d.EmployeePayroll)
+                .ThenInclude(p => p.Employer)
+            .Where(d => d.EmployeePayroll.Employee.TIN == tin)
+            .OrderBy(d => d.Year).ThenBy(d => d.Month)
+            .ToListAsync();
+
         // ═══════════════════════════════════════════════════════════════════
         // YOUR FORMULA (Chaminda example):
         // 1. Current salary Rs. 400,000 → annual = Rs. 4,800,000
@@ -131,11 +139,12 @@ public class TaxReportController : ControllerBase
             remainingMonthsInFY = remainingMonths,
             adjustedMonthlyDeduction = adjustedMonthly,
 
-            // Monthly history
-            monthlyHistory = allDeductions.Select(d => new
+            // Monthly history (ALL employers)
+            monthlyHistory = allEmployerDeductions.Select(d => new
             {
                 month = $"{d.Year}-{d.Month:D2}",
                 monthLabel = new DateTime(d.Year, d.Month, 1).ToString("MMMM yyyy"),
+                employerName = d.EmployeePayroll.Employer.OrganizationName,
                 grossIncome = d.GrossIncome,
                 deductionAmount = d.MonthlyDeductionAmount,
                 cumulativeAtMonth = d.CumulativeDeductionAtCalculation + d.MonthlyDeductionAmount,

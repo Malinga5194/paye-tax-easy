@@ -202,26 +202,34 @@ export default function TaxReportModal({ report, period, onClose }: Props) {
           </table>
 
           {/* Monthly History */}
-          <h4 style={styles.sectionTitle}>Monthly Deduction History</h4>
-          <div style={{ maxHeight: '220px', overflowY: 'auto', border: '1px solid #eee', borderRadius: '6px' }}>
+          <h4 style={styles.sectionTitle}>Monthly PAYE Tax Deduction History (All Employers)</h4>
+          <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #eee', borderRadius: '6px' }}>
             <table style={{ ...styles.table, marginBottom: 0 }}>
               <thead>
                 <tr style={styles.thead}>
                   <th style={th}>Month</th>
+                  <th style={th}>Employer</th>
                   <th style={{ ...th, textAlign: 'right' }}>Gross Salary</th>
-                  <th style={{ ...th, textAlign: 'right' }}>Deduction</th>
+                  <th style={{ ...th, textAlign: 'right' }}>PAYE Deduction</th>
                   <th style={{ ...th, textAlign: 'right' }}>Cumulative Total</th>
                 </tr>
               </thead>
               <tbody>
-                {report.monthlyHistory.map((m, i) => (
-                  <tr key={i} style={{ background: i % 2 === 0 ? '#fff' : '#f8f9fa', borderBottom: '1px solid #eee' }}>
-                    <td style={td}>{m.monthLabel}</td>
-                    <td style={{ ...td, textAlign: 'right' }}>Rs. {m.grossIncome.toLocaleString()}</td>
-                    <td style={{ ...td, textAlign: 'right', fontWeight: 600, color: '#003366' }}>Rs. {m.deductionAmount.toLocaleString()}</td>
-                    <td style={{ ...td, textAlign: 'right', color: '#27ae60' }}>Rs. {m.cumulativeAtMonth.toLocaleString()}</td>
-                  </tr>
-                ))}
+                {report.monthlyHistory.map((m: any, i: number) => {
+                  const isPrior = m.trigger === 'PriorEmployer';
+                  return (
+                    <tr key={i} style={{ background: isPrior ? '#fff8e1' : (i % 2 === 0 ? '#fff' : '#f8f9fa'), borderBottom: '1px solid #eee' }}>
+                      <td style={td}>{m.monthLabel}</td>
+                      <td style={td}>
+                        <span style={{ fontSize: '0.82rem' }}>{m.employerName || report.employerName}</span>
+                        {isPrior && <span style={{ marginLeft: '6px', background: '#ffc107', color: '#333', padding: '1px 6px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 600 }}>Prior</span>}
+                      </td>
+                      <td style={{ ...td, textAlign: 'right' }}>Rs. {m.grossIncome.toLocaleString()}</td>
+                      <td style={{ ...td, textAlign: 'right', fontWeight: 600, color: isPrior ? '#e67e22' : '#003366' }}>Rs. {m.deductionAmount.toLocaleString()}</td>
+                      <td style={{ ...td, textAlign: 'right', color: '#27ae60' }}>Rs. {m.cumulativeAtMonth.toLocaleString()}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
