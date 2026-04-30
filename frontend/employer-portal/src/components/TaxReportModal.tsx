@@ -112,7 +112,7 @@ export default function TaxReportModal({ report, period, onClose }: Props) {
           {/* Tax Summary Cards */}
           <div style={styles.summaryCards}>
             <TaxCard label="Annual Tax (Current Salary)" value={report.annualTaxLiability} color="#003366" icon="📊" />
-            <TaxCard label="Total Tax Paid to Date" value={report.totalTaxPaidToDate} color="#27ae60" icon="✓" />
+            <TaxCard label="Cumulative Tax Already Paid" value={report.priorEmployerDeduction} color="#27ae60" icon="✓" />
             <TaxCard label="Tax to Collect (This Employer)" value={report.remainingTaxForYear} color="#e67e22" icon="⏳" />
             <TaxCard label="Adjusted Monthly (This FY)" value={report.adjustedMonthlyDeduction} color="#17a2b8" icon="💰" />
           </div>
@@ -140,9 +140,9 @@ export default function TaxReportModal({ report, period, onClose }: Props) {
             </p>
             <div style={styles.noticeHighlights}>
               <div style={styles.highlightItem}>
-                <span style={styles.highlightLabel}>Cumulative Tax Paid to Date</span>
+                <span style={styles.highlightLabel}>Cumulative Tax Already Paid (IRD)</span>
                 <span style={{ ...styles.highlightValue, color: '#27ae60' }}>
-                  Rs. {report.totalTaxPaidToDate.toLocaleString()}
+                  Rs. {report.priorEmployerDeduction.toLocaleString()}
                 </span>
               </div>
               <div style={styles.highlightDivider} />
