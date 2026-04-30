@@ -204,8 +204,8 @@ public class PayrollService : IPayrollService
             // Adjusted monthly = withSystemTotal / remaining months
             decimal adjustedMonthly = Math.Max(0, Math.Round(withSystemTotal / remainingMonths, 0));
 
-            // Total tax paid so far (prior + what we've charged)
-            decimal totalPaid = priorDeduction + allDeductions.Sum(d => d.MonthlyDeductionAmount);
+            // Cumulative tax paid = only prior employer (IRD data)
+            decimal cumulativeTaxPaid = priorDeduction;
 
             // Annual tax liability = standard monthly × 12 (based on current salary)
             decimal annualTax = annualTaxOnCurrentSalary;
@@ -221,7 +221,7 @@ public class PayrollService : IPayrollService
                 p.Employee.FullName,
                 p.GrossMonthlySalary,
                 adjustedMonthly,
-                totalPaid,
+                cumulativeTaxPaid,
                 hasPrior,
                 isOverpaid,
                 annualTax,
