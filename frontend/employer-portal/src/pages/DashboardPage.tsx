@@ -4,24 +4,6 @@ import SalaryEntryForm from '../components/SalaryEntryForm';
 import TaxReportModal from '../components/TaxReportModal';
 import { Header, Footer } from '../components/Layout';
 
-const CURRENT_FY = '2025-26';
-
-// Financial year months for the picker
-const FY_MONTHS = [
-  { value: '2025-04', label: 'April 2025' },
-  { value: '2025-05', label: 'May 2025' },
-  { value: '2025-06', label: 'June 2025' },
-  { value: '2025-07', label: 'July 2025' },
-  { value: '2025-08', label: 'August 2025' },
-  { value: '2025-09', label: 'September 2025' },
-  { value: '2025-10', label: 'October 2025' },
-  { value: '2025-11', label: 'November 2025' },
-  { value: '2025-12', label: 'December 2025' },
-  { value: '2026-01', label: 'January 2026' },
-  { value: '2026-02', label: 'February 2026' },
-  { value: '2026-03', label: 'March 2026' },
-];
-
 interface DeductionSummary {
   employeeTIN: string;
   employeeName: string;
@@ -45,9 +27,14 @@ const SCENARIO_COLORS: Record<string, string> = {
   'Stable': '#6c757d',
 };
 
+const FY_OPTIONS = [
+  { value: '2025-26', label: 'FY 2025-26 (Apr 2025 – Mar 2026)' },
+  { value: '2024-25', label: 'FY 2024-25 (Apr 2024 – Mar 2025)' },
+];
+
 export default function DashboardPage() {
   const [summary, setSummary] = useState<DeductionSummary[]>([]);
-  const [period, setPeriod] = useState('2026-03');
+  const [financialYear, setFinancialYear] = useState('2025-26');
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [message, setMessage] = useState('');
@@ -56,6 +43,9 @@ export default function DashboardPage() {
   const loadSummary = async () => {
     setLoading(true);
     try {
+      // Use March of the FY as the period to get full year data
+      const fyStartYear = parseInt(financialYear.split('-')[0]);
+      const period = `${fyStartYear + 1}-03`;
       const res = await apiClient.get(`/payroll/summary/${period}`);
       setSummary(res.data);
     } catch {
@@ -65,14 +55,7 @@ export default function DashboardPage() {
     }
   };
 
-  useEffect(() => { loadSummary(); }, [period]);
-
-  const handleFinalize = async () => {
-    if (!confirm(`Finalize and lock payroll for ${period}?`)) return;
-    await apiClient.post(`/payroll/summary/${period}/finalize`);
-    setMessage(`Period ${period} finalized.`);
-    loadSummary();
-  };
+  useEffect(() => { loadSummary(); }, [financialYear]);
 
   const handleSubmit = async () => {
     if (summary.length === 0) { setMessage('No employees to submit.'); return; }
@@ -80,13 +63,13 @@ export default function DashboardPage() {
       employeeTIN: s.employeeTIN,
       grossSalary: s.grossSalary,
       monthlyDeduction: s.monthlyDeduction,
-      month: parseInt(period.split('-')[1]),
-      year: parseInt(period.split('-')[0]),
+      month: 3,
+      year: parseInt(financialYear.split('-')[0]) + 1,
     }));
     try {
       const res = await apiClient.post('/payroll/submissions', {
-        financialYear: CURRENT_FY,
-        period,
+        financialYear,
+        period: `${parseInt(financialYear.split('-')[0]) + 1}-03`,
         lines,
       });
       setMessage(`Submitted! IRD Ref: ${res.data.irdReferenceNumber}`);
@@ -95,9 +78,8 @@ export default function DashboardPage() {
     }
   };
 
-  const selectedLabel = FY_MONTHS.find(m => m.value === period)?.label || period;
   const totalAnnualTax = summary.reduce((s, e) => s + e.annualTaxLiability, 0);
-  const totalYTD = summary.reduce((s, e) => s + e.yearToDateCumulativeDeduction, 0);
+  const totalPaid = summary.reduce((s, e) => s + e.yearToDateCumulativeDeduction, 0);
   const totalRemaining = summary.reduce((s, e) => s + e.remainingTaxForYear, 0);
 
   return (
@@ -108,35 +90,33 @@ export default function DashboardPage() {
         {/* Page Header */}
         <div style={styles.pageHeader}>
           <div>
-            <h1 style={styles.title}>PAYE Deduction Dashboard</h1>
-            <p style={styles.subtitle}>Financial Year: {CURRENT_FY} &nbsp;|&nbsp; Select a month to view cumulative and remaining tax</p>
+            <h1 style={styles.title}>PAYE Tax Liability Dashboard</h1>
+            <p style={styles.subtitle}>View employee tax liability for the selected financial year based on joining date and cumulative tax paid</p>
           </div>
           <div style={styles.actions}>
-            <button style={styles.btnPrimary} onClick={() => setShowForm(true)}>+ Add Employee</button>
-            <button style={styles.btnSecondary} onClick={handleFinalize}>Finalize Period</button>
+            <button style={styles.btnPrimary} onClick={() => setShowForm(true)}>+ Add / Link Employee</button>
             <button style={styles.btnSuccess} onClick={handleSubmit}>Submit to IRD</button>
           </div>
         </div>
 
         {message && <div style={styles.message}>✓ {message}</div>}
 
-        {/* Period Picker */}
+        {/* Financial Year Selector */}
         <div style={styles.pickerBar}>
-          <label style={styles.pickerLabel}>📅 Select Period:</label>
-          <select style={styles.picker} value={period} onChange={e => setPeriod(e.target.value)}>
-            {FY_MONTHS.map(m => (
-              <option key={m.value} value={m.value}>{m.label}</option>
+          <label style={styles.pickerLabel}>📅 Financial Year:</label>
+          <select style={styles.picker} value={financialYear} onChange={e => setFinancialYear(e.target.value)}>
+            {FY_OPTIONS.map(fy => (
+              <option key={fy.value} value={fy.value}>{fy.label}</option>
             ))}
           </select>
-          <span style={styles.pickerInfo}>Showing data as of <strong>{selectedLabel}</strong></span>
         </div>
 
         {/* Summary Cards */}
         <div style={styles.cards}>
           <SummaryCard label="Total Employees" value={summary.length} color="#003366" icon="👥" />
           <SummaryCard label="Total Annual Tax Liability" value={`Rs. ${totalAnnualTax.toLocaleString()}`} color="#17a2b8" icon="📊" />
-          <SummaryCard label="Cumulative Tax Paid (YTD)" value={`Rs. ${totalYTD.toLocaleString()}`} color="#27ae60" icon="✓" />
-          <SummaryCard label="Remaining Tax for FY" value={`Rs. ${totalRemaining.toLocaleString()}`} color="#e67e22" icon="⏳" />
+          <SummaryCard label="Total Tax Paid (Cumulative)" value={`Rs. ${totalPaid.toLocaleString()}`} color="#27ae60" icon="✓" />
+          <SummaryCard label="Total Remaining Tax" value={`Rs. ${totalRemaining.toLocaleString()}`} color="#e67e22" icon="⏳" />
         </div>
 
         {/* Employee Table */}
@@ -151,18 +131,18 @@ export default function DashboardPage() {
                 <th style={th}>Scenario</th>
                 <th style={th}>Annual Tax Liability</th>
                 <th style={th}>Cumulative Tax Paid</th>
-                <th style={th}>Monthly Deduction</th>
+                <th style={th}>Adjusted Monthly</th>
                 <th style={th}>Remaining Tax</th>
                 <th style={th}>Remaining Months</th>
                 <th style={th}>Status</th>
-                <th style={th}>IRD Data</th>
+                <th style={th}>Tax Report</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr><td colSpan={12} style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>Loading...</td></tr>
               ) : summary.length === 0 ? (
-                <tr><td colSpan={12} style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No employees found for this period.</td></tr>
+                <tr><td colSpan={12} style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No employees found for this financial year.</td></tr>
               ) : summary.map(row => (
                 <tr key={row.employeeTIN} style={styles.tr}>
                   <td style={td}><strong>{row.employeeName}</strong></td>
@@ -189,20 +169,21 @@ export default function DashboardPage() {
                   <td style={td}>
                     <button
                       type="button"
-                      style={{ padding: '5px 12px', background: '#17a2b8', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
+                      style={{ padding: '5px 12px', background: '#17a2b8', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, whiteSpace: 'nowrap' }}
                       onClick={async (e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         try {
-                          await apiClient.get(`/ird/cumulative/${row.employeeTIN}/${CURRENT_FY}`);
-                          const res = await apiClient.get(`/tax-report/${row.employeeTIN}/${CURRENT_FY}/${period}`);
+                          await apiClient.get(`/ird/cumulative/${row.employeeTIN}/${financialYear}`);
+                          const fyStartYear = parseInt(financialYear.split('-')[0]);
+                          const res = await apiClient.get(`/tax-report/${row.employeeTIN}/${financialYear}/${fyStartYear + 1}-03`);
                           setSelectedReport({ data: res.data, tin: row.employeeTIN });
                         } catch (err: any) {
                           alert(`Error: ${err.response?.data?.message || err.message}`);
                         }
                       }}
                     >
-                      📋 Fetch IRD & Report
+                      📋 View Report
                     </button>
                   </td>
                 </tr>
@@ -213,7 +194,7 @@ export default function DashboardPage() {
       </div>
 
       {showForm && (
-        <SalaryEntryForm financialYear={CURRENT_FY}
+        <SalaryEntryForm financialYear={financialYear}
           onSuccess={() => { setShowForm(false); loadSummary(); }}
           onCancel={() => setShowForm(false)} />
       )}
@@ -221,7 +202,7 @@ export default function DashboardPage() {
       {selectedReport && (
         <TaxReportModal
           report={selectedReport.data}
-          period={period}
+          period={`${parseInt(financialYear.split('-')[0]) + 1}-03`}
           onClose={() => setSelectedReport(null)}
         />
       )}
@@ -248,13 +229,11 @@ const styles: Record<string, React.CSSProperties> = {
   subtitle: { margin: '4px 0 0', color: '#666', fontSize: '0.9rem' },
   actions: { display: 'flex', gap: '0.75rem', flexWrap: 'wrap' },
   btnPrimary: { padding: '8px 16px', background: '#003366', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 },
-  btnSecondary: { padding: '8px 16px', background: '#6c757d', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 },
   btnSuccess: { padding: '8px 16px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 },
   message: { background: '#d4edda', color: '#155724', padding: '10px 16px', borderRadius: '6px', marginBottom: '1rem' },
-  pickerBar: { display: 'flex', alignItems: 'center', gap: '1rem', background: '#fff', padding: '1rem 1.5rem', borderRadius: '8px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: '1.5rem', flexWrap: 'wrap' },
+  pickerBar: { display: 'flex', alignItems: 'center', gap: '1rem', background: '#fff', padding: '1rem 1.5rem', borderRadius: '8px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: '1.5rem' },
   pickerLabel: { fontWeight: 700, color: '#003366', fontSize: '1rem' },
   picker: { padding: '8px 14px', border: '2px solid #003366', borderRadius: '6px', fontSize: '1rem', color: '#003366', fontWeight: 600, cursor: 'pointer', background: '#f0f4f8' },
-  pickerInfo: { color: '#555', fontSize: '0.9rem' },
   cards: { display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' },
   tableWrapper: { background: '#fff', borderRadius: '8px', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', overflow: 'auto' },
   table: { width: '100%', borderCollapse: 'collapse', minWidth: '1100px' },

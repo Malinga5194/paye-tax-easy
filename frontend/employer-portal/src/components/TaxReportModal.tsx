@@ -152,7 +152,7 @@ export default function TaxReportModal({ report, period, onClose }: Props) {
               </div>
               <div style={styles.highlightDivider} />
               <div style={styles.highlightItem}>
-                <span style={styles.highlightLabel}>Standard Monthly Deduction (Next FY)</span>
+                <span style={styles.highlightLabel}>Standard Monthly (Next FY — No Adjustments)</span>
                 <span style={{ ...styles.highlightValue, color: '#003366' }}>
                   Rs. {Math.round(report.annualTaxLiability / 12).toLocaleString()}
                 </span>
@@ -163,10 +163,11 @@ export default function TaxReportModal({ report, period, onClose }: Props) {
               <span style={styles.inlineHighlight}>Rs. {report.adjustedMonthlyDeduction.toLocaleString()}</span>{' '}
               will be charged for the remaining{' '}
               <span style={styles.inlineHighlight}>{report.remainingMonthsInFY} month{report.remainingMonthsInFY !== 1 ? 's' : ''}</span>{' '}
-              of the current financial year ({report.financialYear}). From the next financial year onwards,
-              the standard monthly deduction of{' '}
+              of the current financial year ({report.financialYear}). This adjusted amount considers the cumulative
+              tax already paid by the employee during this financial year.{' '}
+              <strong>From the next financial year, no adjustments will be applied</strong> — the standard monthly deduction of{' '}
               <span style={styles.inlineHighlight}>Rs. {Math.round(report.annualTaxLiability / 12).toLocaleString()}</span>{' '}
-              will apply, calculated fresh without considering prior cumulative payments.
+              will be charged fresh based on the employee's current salary, without considering any prior cumulative payments.
             </p>
           </div>
 
