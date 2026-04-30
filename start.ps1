@@ -14,7 +14,14 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
+if (-not $root -or $root -eq "") {
+    $root = $PSScriptRoot
+}
+if (-not $root -or $root -eq "") {
+    $root = Get-Location
+}
 Set-Location $root
+Write-Host "  Project root: $root" -ForegroundColor Gray
 
 # ── Kill any existing processes first ─────────────────────────
 Write-Host "[0/6] Cleaning up old processes..." -ForegroundColor Yellow
