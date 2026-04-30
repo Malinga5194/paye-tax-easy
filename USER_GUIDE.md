@@ -278,49 +278,61 @@ The new user can immediately log in to their respective portal.
 
 The system includes 8 pre-loaded employees covering all PAYE tax scenarios:
 
-### Scenario 1 — Below Tax Relief (Kamal Perera)
-- Monthly salary: Rs. 150,000
-- Annual income: Rs. 1,800,000
-- Tax: Rs. 0 (fully within tax relief)
+### Scenario A — Stable Employment (Amal Perera)
+- Monthly salary: Rs. 200,000
+- Annual income: Rs. 2,400,000
+- Taxable: Rs. 600,000 at 6% = Rs. 36,000 annual tax
+- Monthly deduction: Rs. 3,000
+- **Takeaway**: System works correctly for stable employment
+
+### Scenario B — Mid-Year Promotion (Bhagya Silva)
+- Apr–Sep 2025: Rs. 150,000/month
+- Oct 2025–Mar 2026: Rs. 250,000/month (promoted)
+- Actual annual income: Rs. 2,400,000
+- **Without system**: Employer assumes Rs. 250,000 × 12 = Rs. 3,000,000 → overtaxed
+- **With system**: Uses actual cumulative → correct tax on Rs. 2,400,000
+
+### Scenario C — Job Change (Chaminda Fernando)
+- Prior employer (XYZ Holdings): Apr–Jul 2025 at Rs. 300,000/month
+- Current employer (ABC Company): Aug 2025–Mar 2026 at Rs. 400,000/month
+- Prior tax paid (IRD): Rs. 74,000
+- **Without system**: Rs. 50,000/month × 8 = Rs. 400,000 (overtaxed)
+- **With system**: (Rs. 400,000 − Rs. 74,000) ÷ 8 = **Rs. 40,750/month**
+- Next FY: Rs. 50,000/month (no adjustments)
+
+### Scenario D — Layoff & Re-employment (Dilini Jayasinghe)
+- Prior employer (Lanka Tech): Apr–Aug 2025 at Rs. 250,000/month
+- Unemployed: Sep–Dec 2025
+- Current employer (ABC Company): Jan–Mar 2026 at Rs. 200,000/month
+- Prior tax paid (IRD): Rs. 40,000
+- **With system**: Adjusted deduction considers prior payments
+
+### Scenario E — Migration Attempt (Eranga Bandara)
+- Prior employer (XYZ Holdings): Apr–Jun 2025 at Rs. 350,000/month
+- Resigned for migration, migration failed
+- Unemployed: Jul–Sep 2025
+- Current employer (ABC Company): Oct 2025–Mar 2026 at Rs. 350,000/month
+- Prior tax paid (IRD): Rs. 97,500
+- **Without system**: Rs. 50,000 × 6 = Rs. 300,000 (overtaxed)
+- **With system**: Adjusted using cumulative → correct deduction
+
+### Scenario F — Below Tax Relief (Fathima Rizna)
+- Monthly salary: Rs. 120,000
+- Annual income: Rs. 1,440,000 (below Rs. 1,800,000 relief)
+- Tax: Rs. 0
 - Monthly deduction: Rs. 0
 
-### Scenario 2 — 6% Tax Slab (Nimal Silva)
-- Monthly salary: Rs. 250,000
-- Annual income: Rs. 3,000,000
-- Annual tax: Rs. 96,000
-- Monthly deduction: Rs. 8,000
-
-### Scenario 3 — Recently Joined Mid-Year (Priya Jayasinghe)
-- Joined: October 2025
-- Monthly salary: Rs. 320,000
-- Adjusted deduction calculated for remaining 6 months only
-
-### Scenario 4 — Salary Increase (Amali Fernando)
-- Apr–Jul 2025: Rs. 200,000/month
-- Aug 2025–Mar 2026: Rs. 350,000/month
-- System recalculates deduction from August using actual cumulative income
-
-### Scenario 5 — Salary Decrease (Suresh Bandara)
-- Apr–Aug 2025: Rs. 400,000/month
-- Sep 2025–Mar 2026: Rs. 280,000/month
-- System recalculates deduction from September
-
-### Scenario 6 — Changed Employer (Roshan Wickrama)
-- Prior employer: Apr–Oct 2025 at Rs. 500,000/month
-- Joined this company: November 2025
-- IRD data loaded showing prior deductions
-- Adjusted monthly deduction calculated for remaining months
-
-### Scenario 7 — Resigned Mid-Year (Dilani Rathnayake)
-- Monthly salary: Rs. 180,000
-- Resigned: December 2025
-- Deductions recorded only for active months (Apr–Dec)
-
-### Scenario 8 — High Earner 36% Slab (Chamara Dissanayake)
+### Scenario G — High Earner 36% Slab (Gayan Wickrama)
 - Monthly salary: Rs. 600,000
 - Annual income: Rs. 7,200,000
 - Annual tax: Rs. 1,464,000
 - Monthly deduction: Rs. 122,000
+
+### Scenario H — Resigned Mid-Year (Harsha Rathnayake)
+- Monthly salary: Rs. 180,000
+- Worked: Apr–Dec 2025 (9 months)
+- Annual income: Rs. 1,620,000 (below relief)
+- Tax: Rs. 0
 
 ---
 
@@ -331,22 +343,32 @@ The system includes 8 pre-loaded employees covering all PAYE tax scenarios:
 | Role | Email | Password | Portal |
 |---|---|---|---|
 | Employer | `employer@test.com` | `Test@1234` | Employer Portal |
-| Employee | `employee@test.com` | `Test@1234` | Employee Portal |
+| Employee | (see employee accounts below) | `Test@1234` | Employee Portal |
 | IRD Officer | `ird@test.com` | `Test@1234` | IRD Dashboard |
 | System Admin | `admin@payetaxeasy.lk` | `Admin@1234` | Admin Portal |
 
-### Test Employee Accounts
+### Employee Accounts
 
-| Employee | Email | Password |
+All employee accounts use password: `Test@1234`
+
+| Employee | Email | TIN | Scenario | Current Employer |
+|---|---|---|---|---|
+| Amal Perera | `amal.perera@test.com` | 100000001 | Stable employment | ABC Company Ltd |
+| Bhagya Silva | `bhagya.silva@test.com` | 100000002 | Mid-year promotion | ABC Company Ltd |
+| Chaminda Fernando | `chaminda.fernando@test.com` | 100000003 | Job change (prior: XYZ Holdings) | ABC Company Ltd |
+| Dilini Jayasinghe | `dilini.jayasinghe@test.com` | 100000004 | Layoff & re-employment (prior: Lanka Tech) | ABC Company Ltd |
+| Eranga Bandara | `eranga.bandara@test.com` | 100000005 | Migration attempt (prior: XYZ Holdings) | ABC Company Ltd |
+| Fathima Rizna | `fathima.rizna@test.com` | 100000006 | Below tax relief | ABC Company Ltd |
+| Gayan Wickrama | `gayan.wickrama@test.com` | 100000007 | High earner — 36% slab | ABC Company Ltd |
+| Harsha Rathnayake | `harsha.rathnayake@test.com` | 100000008 | Resigned mid-year | ABC Company Ltd |
+
+### Employers in the System
+
+| Employer | TIN | Role |
 |---|---|---|
-| Kamal Perera | `kamal.perera@test.com` | `Test@1234` |
-| Nimal Silva | `nimal.silva@test.com` | `Test@1234` |
-| Priya Jayasinghe | `priya.jayasinghe@test.com` | `Test@1234` |
-| Amali Fernando | `amali.fernando@test.com` | `Test@1234` |
-| Suresh Bandara | `suresh.bandara@test.com` | `Test@1234` |
-| Roshan Wickrama | `roshan.wickrama@test.com` | `Test@1234` |
-| Dilani Rathnayake | `dilani.rathnayake@test.com` | `Test@1234` |
-| Chamara Dissanayake | `chamara.dissanayake@test.com` | `Test@1234` |
+| ABC Company Ltd | 200000001 | Current employer (login: `employer@test.com`) |
+| XYZ Holdings Pvt Ltd | 200000002 | Prior employer for Chaminda & Eranga |
+| Lanka Tech Solutions Pvt Ltd | 200000003 | Prior employer for Dilini |
 
 ---
 
