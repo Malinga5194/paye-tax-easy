@@ -103,11 +103,11 @@ export default function TaxReportModal({ report, period, onClose }: Props) {
             <h4 style={{ margin: '0 0 10px', color: '#003366' }}>📐 Tax Calculation Breakdown</h4>
             <table style={{ width: '100%', fontSize: '0.9rem' }}>
               <tbody>
-                <tr><td style={{ padding: '4px 0' }}>① Standard monthly deduction (based on current salary)</td><td style={{ textAlign: 'right', fontWeight: 600 }}>Rs. {(report.standardMonthly || Math.round(report.annualTaxLiability / 12)).toLocaleString()}</td></tr>
-                <tr><td style={{ padding: '4px 0' }}>② Tax for remaining {report.remainingMonthsInFY} months (① × {report.remainingMonthsInFY})</td><td style={{ textAlign: 'right', fontWeight: 600 }}>Rs. {(report.taxForRemainingMonths || (Math.round(report.annualTaxLiability / 12) * report.remainingMonthsInFY)).toLocaleString()}</td></tr>
-                <tr><td style={{ padding: '4px 0' }}>③ Cumulative tax already paid (from IRD)</td><td style={{ textAlign: 'right', fontWeight: 600, color: '#27ae60' }}>− Rs. {report.priorEmployerDeduction.toLocaleString()}</td></tr>
-                <tr style={{ borderTop: '2px solid #003366' }}><td style={{ padding: '6px 0', fontWeight: 700 }}>④ Remaining tax to collect (② − ③)</td><td style={{ textAlign: 'right', fontWeight: 700, color: '#e67e22' }}>Rs. {((report.taxForRemainingMonths || (Math.round(report.annualTaxLiability / 12) * report.remainingMonthsInFY)) - report.priorEmployerDeduction).toLocaleString()}</td></tr>
-                <tr><td style={{ padding: '6px 0', fontWeight: 700, color: '#003366' }}>⑤ Adjusted monthly deduction (④ ÷ {report.remainingMonthsInFY})</td><td style={{ textAlign: 'right', fontWeight: 700, color: '#17a2b8', fontSize: '1.1rem' }}>Rs. {report.adjustedMonthlyDeduction.toLocaleString()}</td></tr>
+                <tr><td style={{ padding: '4px 0' }}><StepBadge n={1} /> Standard monthly deduction (based on current salary)</td><td style={{ textAlign: 'right', fontWeight: 600 }}>Rs. {(report.standardMonthly || Math.round(report.annualTaxLiability / 12)).toLocaleString()}</td></tr>
+                <tr><td style={{ padding: '4px 0' }}><StepBadge n={2} /> Tax for remaining {report.remainingMonthsInFY} months (<StepBadge n={1} small /> × {report.remainingMonthsInFY})</td><td style={{ textAlign: 'right', fontWeight: 600 }}>Rs. {(report.taxForRemainingMonths || (Math.round(report.annualTaxLiability / 12) * report.remainingMonthsInFY)).toLocaleString()}</td></tr>
+                <tr><td style={{ padding: '4px 0' }}><StepBadge n={3} /> Cumulative tax already paid (from IRD)</td><td style={{ textAlign: 'right', fontWeight: 600, color: '#27ae60' }}>− Rs. {report.priorEmployerDeduction.toLocaleString()}</td></tr>
+                <tr style={{ borderTop: '2px solid #003366' }}><td style={{ padding: '6px 0', fontWeight: 700 }}><StepBadge n={4} /> Remaining tax to collect (<StepBadge n={2} small /> − <StepBadge n={3} small />)</td><td style={{ textAlign: 'right', fontWeight: 700, color: '#e67e22' }}>Rs. {((report.taxForRemainingMonths || (Math.round(report.annualTaxLiability / 12) * report.remainingMonthsInFY)) - report.priorEmployerDeduction).toLocaleString()}</td></tr>
+                <tr><td style={{ padding: '6px 0', fontWeight: 700, color: '#003366' }}><StepBadge n={5} /> Adjusted monthly deduction (<StepBadge n={4} small /> ÷ {report.remainingMonthsInFY})</td><td style={{ textAlign: 'right', fontWeight: 700, color: '#17a2b8', fontSize: '1.1rem' }}>Rs. {report.adjustedMonthlyDeduction.toLocaleString()}</td></tr>
               </tbody>
             </table>
           </div>
@@ -281,6 +281,19 @@ function InfoBox({ label, value }: { label: string; value: string }) {
       <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '2px' }}>{label}</div>
       <div style={{ fontWeight: 600, color: '#333', fontSize: '0.9rem' }}>{value}</div>
     </div>
+  );
+}
+
+function StepBadge({ n, small }: { n: number; small?: boolean }) {
+  const size = small ? '16px' : '22px';
+  const font = small ? '0.65rem' : '0.75rem';
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      width: size, height: size, borderRadius: '50%',
+      background: '#003366', color: '#fff', fontSize: font, fontWeight: 700,
+      lineHeight: 1, verticalAlign: 'middle', marginRight: small ? '0' : '6px'
+    }}>{n}</span>
   );
 }
 
