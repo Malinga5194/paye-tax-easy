@@ -16,36 +16,78 @@ Write-Host ""
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $root
 
-# ── Step 1: Apply database migrations ────────────────────────
-Write-Host "[1/5] Applying database migrations..." -ForegroundColor Yellow
-dotnet ef database update --project src/PayeTaxEasy.Infrastructure --startup-project src/PayeTaxEasy.Api | Out-Null
-Write-Host "      Database ready." -ForegroundColor Green
-
-# ── Step 2: Start Backend API ─────────────────────────────────
-Write-Host "[2/5] Starting Backend API on http://localhost:5050 ..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root'; dotnet run --project src/PayeTaxEasy.Api --urls 'http://localhost:5050' --environment Development" -WindowStyle Normal
-Start-Sleep -Seconds 5
-Write-Host "      API started." -ForegroundColor Green
-
-# ── Step 3: Start Employer Portal ────────────────────────────
-Write-Host "[3/5] Starting Employer Portal on http://localhost:5173 ..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root\frontend\employer-portal'; npm run dev" -WindowStyle Normal
+# ── Kill any existing processes first ─────────────────────────
+Write-Host "[0/6] Cleaning up old processes..." -ForegroundColor Yellow
+Get-Process -Name "PayeTaxEasy.Api","dotnet" -ErrorAction SilentlyContinue | Stop-Process -Force 2>$null
 Start-Sleep -Seconds 2
 
-# ── Step 4: Start Employee Portal ────────────────────────────
-Write-Host "[4/5] Starting Employee Portal on http://localhost:5174 ..." -ForegroundColor Yellow
+# ── Step 1: Start Backend API ─────────────────────────────────
+Write-Host "[1/6] Starting Backend API..." -ForegroundColor Yellow
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root'; dotnet run --project src/PayeTaxEasy.Api --urls 'http://localhost:5050' --environment Development" -WindowStyle Normal
+
+# Wait until API is actually responding
+Write-Host "      Waiting for API to be ready..." -ForegroundColor Gray
+$maxWait = 60
+$waited = 0
+while ($waited -lt $maxWait) {
+    try {
+        $response = Invoke-WebRequest -Uri "http://localhost:5050/health" -TimeoutSec 2 -ErrorAction Stop
+        if ($response.StatusCode -eq 200) {
+            Write-Host "      API is ready!" -ForegroundColor Green
+            break
+        }
+    } catch {
+        Start-Sleep -Seconds 2
+        $waited += 2
+        Write-Host "      Still waiting... ($waited seconds)" -ForegroundColor Gray
+    }
+}
+if ($waited -ge $maxWait) {
+    Write-Host "      API took too long. It may still be starting. Continuing..." -ForegroundColor DarkYellow
+}
+
+# ── Step 2: Start Employer Portal ────────────────────────────
+Write-Host "[2/6] Starting Employer Portal..." -ForegroundColor Yellow
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root\frontend\employer-portal'; npm run dev" -WindowStyle Normal
+Start-Sleep -Seconds 3
+
+# ── Step 3: Start Employee Portal ────────────────────────────
+Write-Host "[3/6] Starting Employee Portal..." -ForegroundColor Yellow
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root\frontend\employee-portal'; npm run dev" -WindowStyle Normal
 Start-Sleep -Seconds 2
 
-# ── Step 5: Start IRD Dashboard ──────────────────────────────
-Write-Host "[5/6] Starting IRD Dashboard on http://localhost:5175 ..." -ForegroundColor Yellow
+# ── Step 4: Start IRD Dashboard ──────────────────────────────
+Write-Host "[4/6] Starting IRD Dashboard..." -ForegroundColor Yellow
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root\frontend\ird-dashboard'; npm run dev" -WindowStyle Normal
 Start-Sleep -Seconds 2
 
-# ── Step 6: Start Admin Portal ───────────────────────────────
-Write-Host "[6/6] Starting Admin Portal on http://localhost:5176 ..." -ForegroundColor Yellow
+# ── Step 5: Start Admin Portal ───────────────────────────────
+Write-Host "[5/6] Starting Admin Portal..." -ForegroundColor Yellow
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root\frontend\admin-portal'; npm run dev" -WindowStyle Normal
-Start-Sleep -Seconds 3
+
+# ── Step 6: Wait for frontend to be ready, then open browser ─
+Write-Host "[6/6] Waiting for frontend to be ready..." -ForegroundColor Yellow
+$frontendReady = $false
+$waited = 0
+while ($waited -lt 30) {
+    try {
+        $response = Invoke-WebRequest -Uri "http://localhost:5173" -TimeoutSec 2 -ErrorAction Stop
+        if ($response.StatusCode -eq 200) {
+            $frontendReady = $true
+            break
+        }
+    } catch {
+        Start-Sleep -Seconds 2
+        $waited += 2
+    }
+}
+
+if ($frontendReady) {
+    Start-Process "http://localhost:5173"
+    Write-Host "      Browser opened!" -ForegroundColor Green
+} else {
+    Write-Host "      Frontend still starting. Open http://localhost:5173 manually in a few seconds." -ForegroundColor DarkYellow
+}
 
 # ── Done ──────────────────────────────────────────────────────
 Write-Host ""
@@ -53,12 +95,8 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "   All services started!                " -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "  Backend API   : http://localhost:5050"         -ForegroundColor White
-Write-Host "  Swagger UI    : http://localhost:5050/swagger" -ForegroundColor White
-Write-Host "  Employer      : http://localhost:5173"         -ForegroundColor White
-Write-Host "  Employee      : http://localhost:5174"         -ForegroundColor White
-Write-Host "  IRD Dashboard : http://localhost:5175"         -ForegroundColor White
-Write-Host "  Admin Portal  : http://localhost:5176"         -ForegroundColor White
+Write-Host "  Landing Page  : http://localhost:5173"         -ForegroundColor White
+Write-Host "  Swagger API   : http://localhost:5050/swagger" -ForegroundColor White
 Write-Host ""
 Write-Host "  Login credentials:" -ForegroundColor White
 Write-Host "  Employer  -> employer@test.com   / Test@1234"   -ForegroundColor Gray
@@ -66,14 +104,7 @@ Write-Host "  Employee  -> employee@test.com   / Test@1234"   -ForegroundColor G
 Write-Host "  IRD       -> ird@test.com         / Test@1234"  -ForegroundColor Gray
 Write-Host "  Admin     -> admin@payetaxeasy.lk / Admin@1234" -ForegroundColor Gray
 Write-Host ""
-Write-Host "  NOTE: If a port is in use, Vite will pick the next available one." -ForegroundColor DarkYellow
-Write-Host "        Check the terminal window for the actual URL." -ForegroundColor DarkYellow
+Write-Host "  To stop: run .\stop.ps1 or close all terminal windows" -ForegroundColor DarkYellow
 Write-Host ""
-
-# Open only the landing page in browser
-Start-Sleep -Seconds 4
-Start-Process "http://localhost:5173"
-
-Write-Host "  Landing page opened. Select a portal from the home page." -ForegroundColor Green
-Write-Host "  Press any key to exit this window." -ForegroundColor Green
+Write-Host "  Press any key to close this window." -ForegroundColor Green
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
