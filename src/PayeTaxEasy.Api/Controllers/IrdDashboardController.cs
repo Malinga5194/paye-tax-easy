@@ -60,4 +60,20 @@ public class IrdDashboardController : ControllerBase
         var result = await _dashboard.GetAuditLogsAsync(query);
         return Ok(result);
     }
+
+    /// <summary>GET /ird-dashboard/employers — List all employers with submission summary</summary>
+    [HttpGet("employers")]
+    public async Task<IActionResult> GetAllEmployers([FromQuery] string financialYear = "2025-26")
+    {
+        var result = await _dashboard.GetAllEmployersWithSubmissionsAsync(financialYear);
+        return Ok(result);
+    }
+
+    /// <summary>GET /ird-dashboard/employees — List all employees with tax summary</summary>
+    [HttpGet("employees")]
+    public async Task<IActionResult> GetAllEmployees([FromQuery] string financialYear = "2025-26")
+    {
+        var result = await _dashboard.GetAllEmployeesWithTaxAsync(financialYear);
+        return Ok(result);
+    }
 }

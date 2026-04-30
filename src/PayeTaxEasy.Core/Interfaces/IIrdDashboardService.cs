@@ -8,4 +8,6 @@ public interface IIrdDashboardService
     Task<byte[]> ExportComplianceReportAsync(string financialYear);
     Task<EmployerDetailDto> GetEmployerDetailAsync(string registrationNumber);
     Task<PagedResult<AuditLogEntryDto>> GetAuditLogsAsync(AuditLogQueryDto query);
+    Task<IEnumerable<EmployerSubmissionSummaryDto>> GetAllEmployersWithSubmissionsAsync(string financialYear);
+    Task<IEnumerable<EmployeeTaxSummaryDto>> GetAllEmployeesWithTaxAsync(string financialYear);
 }

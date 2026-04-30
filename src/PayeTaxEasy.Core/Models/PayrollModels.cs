@@ -122,3 +122,24 @@ public record SubmissionFailedPayload(
     string ErrorCode,
     string ErrorMessage,
     IEnumerable<string> ValidationErrors);
+
+public record EmployerSubmissionSummaryDto(
+    string EmployerTIN,
+    string OrganizationName,
+    string RegistrationNumber,
+    int TotalSubmissions,
+    decimal TotalPAYESubmitted,
+    int EmployeeCount,
+    string LatestSubmissionRef,
+    DateTime? LatestSubmissionDate);
+
+public record EmployeeTaxSummaryDto(
+    string EmployeeTIN,
+    string EmployeeName,
+    string CurrentEmployer,
+    decimal GrossMonthlySalary,
+    decimal AnnualTaxLiability,
+    decimal TotalTaxPaid,
+    decimal AdjustedMonthly,
+    DateTime JoiningDate,
+    bool HasPriorEmployer);
