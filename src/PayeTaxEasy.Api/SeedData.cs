@@ -23,7 +23,7 @@ public static class SeedData
             var companyY = new Employer
             {
                 Id = Guid.NewGuid(), TIN = "200000001",
-                OrganizationName = "ABC Company Ltd (Company Y)",
+                OrganizationName = "ABC Company Ltd",
                 RegistrationNumber = "REG001", ContactEmail = "employer@test.com",
                 ContactPhone = "+94112345678", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
             };
@@ -32,7 +32,7 @@ public static class SeedData
             var companyX = new Employer
             {
                 Id = Guid.NewGuid(), TIN = "200000002",
-                OrganizationName = "XYZ Holdings (Company X)",
+                OrganizationName = "XYZ Holdings Pvt Ltd",
                 RegistrationNumber = "REG002", ContactEmail = "hr@xyzholdings.lk",
                 ContactPhone = "+94112345679", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
             };
@@ -41,7 +41,7 @@ public static class SeedData
             var companyZ = new Employer
             {
                 Id = Guid.NewGuid(), TIN = "200000003",
-                OrganizationName = "Lanka Tech Solutions (Company Z)",
+                OrganizationName = "Lanka Tech Solutions Pvt Ltd",
                 RegistrationNumber = "REG003", ContactEmail = "hr@lankatech.lk",
                 ContactPhone = "+94112345680", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
             };
