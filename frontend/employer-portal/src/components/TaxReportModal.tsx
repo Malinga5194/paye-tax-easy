@@ -112,9 +112,10 @@ export default function TaxReportModal({ report, period, onClose }: Props) {
           {/* Tax Summary Cards */}
           <div style={styles.summaryCards}>
             <TaxCard label="Annual Tax (Current Salary)" value={report.annualTaxLiability} color="#003366" icon="📊" />
+            <TaxCard label="Monthly Without Adjustment" value={report.withoutSystemMonthly || Math.round(report.annualTaxLiability / 12)} color="#e74c3c" icon="❌" />
             <TaxCard label="Cumulative Tax Already Paid" value={report.priorEmployerDeduction} color="#27ae60" icon="✓" />
             <TaxCard label="Tax to Collect (This Employer)" value={report.remainingTaxForYear} color="#e67e22" icon="⏳" />
-            <TaxCard label="Adjusted Monthly (This FY)" value={report.adjustedMonthlyDeduction} color="#17a2b8" icon="💰" />
+            <TaxCard label="Adjusted Monthly (This FY)" value={report.adjustedMonthlyDeduction} color="#17a2b8" icon="✅" />
           </div>
 
           {/* Prior Employer Section */}
