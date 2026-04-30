@@ -34,6 +34,7 @@ interface DeductionSummary {
   remainingTaxForYear: number;
   remainingMonthsInFY: number;
   scenario: string;
+  joiningDate: string | null;
 }
 
 const SCENARIO_COLORS: Record<string, string> = {
@@ -145,6 +146,7 @@ export default function DashboardPage() {
               <tr style={styles.thead}>
                 <th style={th}>Employee</th>
                 <th style={th}>TIN</th>
+                <th style={th}>Joining Date</th>
                 <th style={th}>Gross Salary</th>
                 <th style={th}>Scenario</th>
                 <th style={th}>Annual Tax Liability</th>
@@ -158,13 +160,14 @@ export default function DashboardPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={11} style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>Loading...</td></tr>
+                <tr><td colSpan={12} style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>Loading...</td></tr>
               ) : summary.length === 0 ? (
-                <tr><td colSpan={11} style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No employees found for this period.</td></tr>
+                <tr><td colSpan={12} style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No employees found for this period.</td></tr>
               ) : summary.map(row => (
                 <tr key={row.employeeTIN} style={styles.tr}>
                   <td style={td}><strong>{row.employeeName}</strong></td>
                   <td style={td}><code style={{ fontSize: '0.8rem' }}>{row.employeeTIN}</code></td>
+                  <td style={td}>{row.joiningDate ? new Date(row.joiningDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</td>
                   <td style={td}>Rs. {row.grossSalary.toLocaleString()}</td>
                   <td style={td}>
                     <span style={{ background: (SCENARIO_COLORS[row.scenario] || '#6c757d') + '20', color: SCENARIO_COLORS[row.scenario] || '#6c757d', padding: '3px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 600, whiteSpace: 'nowrap' }}>

@@ -44,34 +44,28 @@ public class TaxReportController : ControllerBase
         decimal priorEmployerIncome = irdCache?.CumulativeIncome ?? 0;
         decimal priorEmployerDeduction = irdCache?.CumulativeDeduction ?? 0;
 
-        // Monthly deductions up to selected period
-        var deductionsUpTo = payroll.MonthlyDeductions
-            .Where(d => d.Year < periodDate.Year ||
-                       (d.Year == periodDate.Year && d.Month <= periodDate.Month))
-            .OrderBy(d => d.Year).ThenBy(d => d.Month)
-            .ToList();
-
-        // All monthly deductions for the full year
+        // Use ALL deductions for the full year (consistent regardless of selected month)
         var allDeductions = payroll.MonthlyDeductions
             .OrderBy(d => d.Year).ThenBy(d => d.Month)
             .ToList();
 
-        decimal currentEmployerYTD = deductionsUpTo.Sum(d => d.MonthlyDeductionAmount);
+        // Calculate actual total income for the full year (handles salary changes correctly)
+        decimal actualIncome = priorEmployerIncome + allDeductions.Sum(d => d.GrossIncome);
+        decimal annualTaxLiability = PayeCalculator.CalculateAnnualTax(actualIncome);
+
+        // Total tax paid so far (all months)
+        decimal currentEmployerYTD = allDeductions.Sum(d => d.MonthlyDeductionAmount);
         decimal totalYTD = priorEmployerDeduction + currentEmployerYTD;
 
-        // Calculate remaining months AFTER the selected period
-        var fyEnd = new DateTime(2026, 3, 31);
-        int remainingMonths = Math.Max(0, ((fyEnd.Year - periodDate.Year) * 12) + fyEnd.Month - periodDate.Month);
+        // Remaining months based on active months in the year
+        int totalActiveMonths = allDeductions.Count;
+        int remainingMonths = Math.Max(0, 12 - totalActiveMonths);
 
-        // Project annual income:
-        // Actual income earned up to and including selected period + future months at current salary
-        decimal actualIncomeToDate = priorEmployerIncome + deductionsUpTo.Sum(d => d.GrossIncome);
-        decimal projectedAnnual = actualIncomeToDate + (payroll.GrossMonthlySalary * remainingMonths);
-        decimal annualTaxLiability = PayeCalculator.CalculateAnnualTax(projectedAnnual);
         decimal remainingTax = Math.Max(0, annualTaxLiability - totalYTD);
         decimal adjustedMonthly = remainingMonths > 0
             ? Math.Round(remainingTax / remainingMonths, 0)
             : 0;
+        decimal projectedAnnual = actualIncome;
 
         var report = new
         {
@@ -79,6 +73,7 @@ public class TaxReportController : ControllerBase
             employeeTIN = tin,
             employeeName = employee.FullName,
             employerName = payroll.Employer.OrganizationName,
+            joiningDate = payroll.EmploymentStartDate,
             financialYear,
             reportPeriod = period,
             generatedAt = DateTime.UtcNow,
@@ -148,22 +143,19 @@ public class TaxReportController : ControllerBase
         decimal priorDeduction = irdCache?.CumulativeDeduction ?? 0;
         decimal priorIncome = irdCache?.CumulativeIncome ?? 0;
 
-        var deductionsUpTo = payroll.MonthlyDeductions
-            .Where(d => d.Year < periodDate.Year ||
-                       (d.Year == periodDate.Year && d.Month <= periodDate.Month))
+        // Use ALL deductions for the full year (consistent values)
+        var allDeductions = payroll.MonthlyDeductions
             .OrderBy(d => d.Year).ThenBy(d => d.Month).ToList();
 
-        decimal currentYTD = deductionsUpTo.Sum(d => d.MonthlyDeductionAmount);
+        decimal actualIncome = priorIncome + allDeductions.Sum(d => d.GrossIncome);
+        decimal annualTax = PayeCalculator.CalculateAnnualTax(actualIncome);
+        decimal currentYTD = allDeductions.Sum(d => d.MonthlyDeductionAmount);
         decimal totalYTD = priorDeduction + currentYTD;
-        var fyEnd = new DateTime(2026, 3, 31);
-        // Remaining months AFTER the selected period
-        int remainingMonths = Math.Max(0, ((fyEnd.Year - periodDate.Year) * 12) + fyEnd.Month - periodDate.Month);
-        // Actual income earned up to selected period + future months at current salary
-        decimal actualIncomeToDate = priorIncome + deductionsUpTo.Sum(d => d.GrossIncome);
-        decimal projectedAnnual = actualIncomeToDate + (payroll.GrossMonthlySalary * remainingMonths);
-        decimal annualTax = PayeCalculator.CalculateAnnualTax(projectedAnnual);
+        int totalActiveMonths = allDeductions.Count;
+        int remainingMonths = Math.Max(0, 12 - totalActiveMonths);
         decimal remainingTax = Math.Max(0, annualTax - totalYTD);
         decimal adjustedMonthly = remainingMonths > 0 ? Math.Round(remainingTax / remainingMonths, 0) : 0;
+        decimal projectedAnnual = actualIncome;
 
         QuestPDF.Settings.License = LicenseType.Community;
 

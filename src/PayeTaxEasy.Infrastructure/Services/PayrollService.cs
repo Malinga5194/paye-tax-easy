@@ -156,45 +156,59 @@ public class PayrollService : IPayrollService
         if (!DateTime.TryParse($"{period}-01", out var periodDate))
             periodDate = DateTime.UtcNow;
 
-        // Calculate remaining months in FY from selected period
-        var fyEnd = new DateTime(periodDate.Month >= 4 ? periodDate.Year + 1 : periodDate.Year, 3, 31);
-        int remainingMonths = ((fyEnd.Year - periodDate.Year) * 12) + fyEnd.Month - periodDate.Month + 1;
-        remainingMonths = Math.Max(1, Math.Min(12, remainingMonths));
-
         var payrolls = await _db.EmployeePayrolls
             .Include(p => p.Employee)
             .Include(p => p.MonthlyDeductions)
             .Where(p => p.EmployerId == employer.Id && p.IsActive)
             .ToListAsync();
 
+        // Load IRD cache for all employees
+        var irdCaches = await _db.IrdCumulativeCaches.ToListAsync();
+
         return payrolls.Select(p =>
         {
-            // Get deductions up to and including the selected period
-            var deductionsUpToPeriod = p.MonthlyDeductions
-                .Where(d => d.Year < periodDate.Year ||
-                           (d.Year == periodDate.Year && d.Month <= periodDate.Month))
-                .ToList();
+            // Use ALL deductions for the full year (consistent regardless of selected month)
+            var allDeductions = p.MonthlyDeductions
+                .OrderBy(d => d.Year).ThenBy(d => d.Month).ToList();
 
-            var latest = deductionsUpToPeriod.OrderByDescending(d => d.CalculatedAt).FirstOrDefault()
-                      ?? p.MonthlyDeductions.OrderByDescending(d => d.CalculatedAt).FirstOrDefault();
+            // Get IRD prior employer data
+            var irdData = irdCaches
+                .Where(c => c.EmployeeTIN == p.Employee.TIN)
+                .OrderByDescending(c => c.RetrievedAt)
+                .FirstOrDefault();
+            decimal priorIncome = irdData?.CumulativeIncome ?? 0;
+            decimal priorDeduction = irdData?.CumulativeDeduction ?? 0;
 
-            decimal ytd = deductionsUpToPeriod.Sum(d => d.MonthlyDeductionAmount);
-            decimal annualTax = latest?.AnnualTaxLiability ?? 0;
-            decimal remainingTax = Math.Max(0, annualTax - ytd);
-            bool hasPrior = p.MonthlyDeductions.Any(d => d.CalculationTrigger == "IRDDataRetrieved");
+            // Calculate actual total income for the year (handles salary changes)
+            decimal actualIncome = priorIncome + allDeductions.Sum(d => d.GrossIncome);
+            decimal annualTax = PayeCalculator.CalculateAnnualTax(actualIncome);
+
+            // Total tax paid so far
+            decimal totalPaid = priorDeduction + allDeductions.Sum(d => d.MonthlyDeductionAmount);
+            decimal remainingTax = Math.Max(0, annualTax - totalPaid);
+
+            // Remaining months from joining date (not from selected period)
+            var fyEnd = new DateTime(2026, 3, 31);
+            int totalActiveMonths = allDeductions.Count;
+            int remainingMonths = Math.Max(0, 12 - totalActiveMonths);
+
+            // Monthly deduction — use the latest calculated value
+            var latest = allDeductions.LastOrDefault();
+            bool hasPrior = allDeductions.Any(d => d.CalculationTrigger == "IRDDataRetrieved") || priorDeduction > 0;
 
             return new DeductionSummaryDto(
                 p.Employee.TIN,
                 p.Employee.FullName,
                 p.GrossMonthlySalary,
                 latest?.MonthlyDeductionAmount ?? 0,
-                ytd,
+                totalPaid,
                 hasPrior,
                 latest?.IsOverpaid ?? false,
                 annualTax,
                 remainingTax,
                 remainingMonths,
-                GetScenario(p, periodDate));
+                GetScenario(p, periodDate),
+                p.EmploymentStartDate);
         });
     }
 

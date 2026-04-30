@@ -20,7 +20,8 @@ public record DeductionSummaryDto(
     decimal AnnualTaxLiability = 0,
     decimal RemainingTaxForYear = 0,
     int RemainingMonthsInFY = 0,
-    string Scenario = "");
+    string Scenario = "",
+    DateTime? JoiningDate = null);
 
 public record PayrollSubmissionRequestDto(
     string FinancialYear,
