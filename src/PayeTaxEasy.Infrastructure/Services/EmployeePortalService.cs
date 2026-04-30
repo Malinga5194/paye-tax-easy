@@ -24,16 +24,28 @@ public class EmployeePortalService : IEmployeePortalService
         var employee = await _db.Employees.FirstOrDefaultAsync(e => e.TIN == employeeTin)
             ?? throw new KeyNotFoundException($"Employee TIN {employeeTin} not found.");
 
+        // Financial year: e.g. "2025-26" means Apr 2025 to Mar 2026
+        int fyStartYear = GetFYStartYear(financialYear);
+        var fyStart = new DateTime(fyStartYear, 4, 1);       // 1 April
+        var fyEnd = new DateTime(fyStartYear + 1, 3, 31);    // 31 March
+
         var deductions = await _db.MonthlyDeductions
             .Include(d => d.EmployeePayroll)
                 .ThenInclude(p => p.Employer)
-            .Where(d => d.EmployeePayroll.Employee.TIN == employeeTin
-                && d.Year >= GetFYStartYear(financialYear)
-                && d.Year <= GetFYEndYear(financialYear))
-            .OrderBy(d => d.Year).ThenBy(d => d.Month)
+            .Where(d => d.EmployeePayroll.Employee.TIN == employeeTin)
             .ToListAsync();
 
-        var entries = deductions.Select(d => new DeductionEntryDto(
+        // Filter in memory for correct FY boundary (Apr-Mar)
+        var fyDeductions = deductions
+            .Where(d =>
+            {
+                var deductionDate = new DateTime(d.Year, d.Month, 1);
+                return deductionDate >= fyStart && deductionDate <= fyEnd;
+            })
+            .OrderBy(d => d.Year).ThenBy(d => d.Month)
+            .ToList();
+
+        var entries = fyDeductions.Select(d => new DeductionEntryDto(
             d.EmployeePayroll.Employer.OrganizationName,
             d.MonthlyDeductionAmount,
             new DateTime(d.Year, d.Month, 1),
