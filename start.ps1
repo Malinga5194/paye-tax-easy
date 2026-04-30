@@ -66,27 +66,34 @@ Write-Host "[5/6] Starting Admin Portal..." -ForegroundColor Yellow
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root\frontend\admin-portal'; npm run dev" -WindowStyle Normal
 
 # ── Step 6: Wait for frontend to be ready, then open browser ─
-Write-Host "[6/6] Waiting for frontend to be ready..." -ForegroundColor Yellow
-$frontendReady = $false
+Write-Host "[6/6] Waiting for all services to be ready..." -ForegroundColor Yellow
+Write-Host "      This may take 15-30 seconds on first run..." -ForegroundColor Gray
+
+# Try multiple ports since Vite may pick a different one
+$ports = @(5173, 5174, 5175, 5176, 5177, 5178)
+$frontendUrl = ""
 $waited = 0
-while ($waited -lt 30) {
-    try {
-        $response = Invoke-WebRequest -Uri "http://localhost:5173" -TimeoutSec 2 -ErrorAction Stop
-        if ($response.StatusCode -eq 200) {
-            $frontendReady = $true
-            break
-        }
-    } catch {
-        Start-Sleep -Seconds 2
-        $waited += 2
+while ($waited -lt 60) {
+    foreach ($port in $ports) {
+        try {
+            $response = Invoke-WebRequest -Uri "http://localhost:$port" -TimeoutSec 1 -ErrorAction Stop
+            if ($response.StatusCode -eq 200) {
+                $frontendUrl = "http://localhost:$port"
+                break
+            }
+        } catch { }
     }
+    if ($frontendUrl -ne "") { break }
+    Start-Sleep -Seconds 3
+    $waited += 3
+    Write-Host "      Still waiting... ($waited seconds)" -ForegroundColor Gray
 }
 
-if ($frontendReady) {
-    Start-Process "http://localhost:5173"
-    Write-Host "      Browser opened!" -ForegroundColor Green
+if ($frontendUrl -ne "") {
+    Start-Process $frontendUrl
+    Write-Host "      Browser opened at $frontendUrl" -ForegroundColor Green
 } else {
-    Write-Host "      Frontend still starting. Open http://localhost:5173 manually in a few seconds." -ForegroundColor DarkYellow
+    Write-Host "      Services still starting. Open http://localhost:5173 manually in a few seconds." -ForegroundColor DarkYellow
 }
 
 # ── Done ──────────────────────────────────────────────────────
@@ -95,7 +102,11 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "   All services started!                " -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "  Landing Page  : http://localhost:5173"         -ForegroundColor White
+if ($frontendUrl -ne "") {
+    Write-Host "  Landing Page  : $frontendUrl"              -ForegroundColor White
+} else {
+    Write-Host "  Landing Page  : http://localhost:5173"      -ForegroundColor White
+}
 Write-Host "  Swagger API   : http://localhost:5050/swagger" -ForegroundColor White
 Write-Host ""
 Write-Host "  Login credentials:" -ForegroundColor White
