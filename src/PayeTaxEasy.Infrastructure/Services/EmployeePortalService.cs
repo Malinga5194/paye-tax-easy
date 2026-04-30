@@ -74,32 +74,40 @@ public class EmployeePortalService : IEmployeePortalService
         {
             var irdCache = await _db.IrdCumulativeCaches
                 .Where(c => c.EmployeeTIN == employeeTin && c.FinancialYear == financialYear)
-                .OrderByDescending(c => c.RetrievedAt)
+                .OrderByDescending(c => c.CumulativeDeduction)
+                .ThenByDescending(c => c.RetrievedAt)
                 .FirstOrDefaultAsync();
 
             decimal priorDeduction = irdCache?.CumulativeDeduction ?? 0;
-            decimal priorIncome = irdCache?.CumulativeIncome ?? 0;
 
-            // Use actual income from monthly records (handles salary changes correctly)
-            var allDeductions = payroll.MonthlyDeductions
-                .OrderBy(d => d.Year).ThenBy(d => d.Month).ToList();
+            // ═══════════════════════════════════════════════════════════════
+            // SAME FORMULA AS EMPLOYER REPORT:
+            // Standard monthly = AnnualTax(currentSalary × 12) / 12
+            // Remaining months = months from joining date to end of FY
+            // WITHOUT system = standard monthly × remaining months
+            // WITH system = WITHOUT system - prior deduction
+            // Adjusted monthly = WITH system / remaining months
+            // Next FY = standard monthly (no adjustments)
+            // ═══════════════════════════════════════════════════════════════
 
-            decimal actualIncome = priorIncome + allDeductions.Sum(d => d.GrossIncome);
-            annualTax = Core.Calculator.PayeCalculator.CalculateAnnualTax(actualIncome);
+            // Get the ACTIVE payroll (current employer)
+            var activePayroll = await _db.EmployeePayrolls
+                .Where(p => p.Employee.TIN == employeeTin && p.IsActive)
+                .OrderByDescending(p => p.EmploymentStartDate)
+                .FirstOrDefaultAsync() ?? payroll;
+
+            annualTax = Core.Calculator.PayeCalculator.CalculateAnnualTax(activePayroll.GrossMonthlySalary * 12);
             standardMonthly = Math.Round(annualTax / 12, 0);
 
-            // Remaining months after last recorded deduction
-            var lastDeduction = allDeductions.LastOrDefault();
-            if (lastDeduction != null)
-            {
-                var lastPeriod = new DateTime(lastDeduction.Year, lastDeduction.Month, 1);
-                var fyEnd = new DateTime(2026, 3, 31);
-                remainingMonths = Math.Max(0, ((fyEnd.Year - lastPeriod.Year) * 12) + fyEnd.Month - lastPeriod.Month);
-            }
+            // Remaining months from joining date
+            var fyEnd = new DateTime(2026, 3, 31);
+            var joinDate = activePayroll.EmploymentStartDate;
+            remainingMonths = ((fyEnd.Year - joinDate.Year) * 12) + fyEnd.Month - joinDate.Month + 1;
+            remainingMonths = Math.Max(1, Math.Min(12, remainingMonths));
 
-            decimal totalPaid = priorDeduction + allDeductions.Sum(d => d.MonthlyDeductionAmount);
-            decimal remainingTax = Math.Max(0, annualTax - totalPaid);
-            adjustedMonthly = remainingMonths > 0 ? Math.Round(remainingTax / remainingMonths, 0) : 0;
+            decimal withoutSystemTotal = standardMonthly * remainingMonths;
+            decimal withSystemTotal = Math.Max(0, withoutSystemTotal - priorDeduction);
+            adjustedMonthly = Math.Max(0, Math.Round(withSystemTotal / remainingMonths, 0));
         }
 
         QuestPDF.Settings.License = LicenseType.Community;
@@ -208,19 +216,19 @@ public class EmployeePortalService : IEmployeePortalService
                             {
                                 row.RelativeItem().Background("#ffffff").Border(1).BorderColor("#fcd34d").Padding(8).Column(c =>
                                 {
-                                    c.Item().Text("Total Tax Paid This FY").FontSize(8).FontColor("#92400e").Bold();
-                                    c.Item().Text($"Rs. {history.CumulativeTotal:N0}").Bold().FontSize(12).FontColor("#27ae60");
+                                    c.Item().Text("Cumulative PAYE Tax Already Paid (IRD)").FontSize(7).FontColor("#92400e").Bold();
+                                    c.Item().Text($"Rs. {(history.CumulativeTotal - (adjustedMonthly * remainingMonths)):N0}").Bold().FontSize(12).FontColor("#27ae60");
                                 });
                                 row.ConstantItem(8);
                                 row.RelativeItem().Background("#ffffff").Border(1).BorderColor("#fcd34d").Padding(8).Column(c =>
                                 {
-                                    c.Item().Text("Adjusted Monthly Deduction (This FY)").FontSize(8).FontColor("#92400e").Bold();
+                                    c.Item().Text("Adjusted Monthly PAYE Tax (This FY)").FontSize(7).FontColor("#92400e").Bold();
                                     c.Item().Text($"Rs. {adjustedMonthly:N0}").Bold().FontSize(12).FontColor("#17a2b8");
                                 });
                                 row.ConstantItem(8);
                                 row.RelativeItem().Background("#ffffff").Border(1).BorderColor("#fcd34d").Padding(8).Column(c =>
                                 {
-                                    c.Item().Text("Standard Monthly Deduction (Next FY)").FontSize(8).FontColor("#92400e").Bold();
+                                    c.Item().Text("Standard Monthly PAYE Tax (Next FY)").FontSize(7).FontColor("#92400e").Bold();
                                     c.Item().Text($"Rs. {standardMonthly:N0}").Bold().FontSize(12).FontColor("#003366");
                                 });
                             });
