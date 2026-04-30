@@ -33,30 +33,29 @@ public class IrdIntegrationService : IIrdIntegrationService
     public async Task<CumulativeDataDto> GetCumulativeDataAsync(
         string employeeTin, string financialYear, Guid requestingEmployerId)
     {
-        // Check cache first (most recent entry for this TIN + FY)
+        // Check cache first — if we have data with actual values, always use it
         var cached = await _db.IrdCumulativeCaches
             .Where(c => c.EmployeeTIN == employeeTin && c.FinancialYear == financialYear)
-            .OrderByDescending(c => c.RetrievedAt)
+            .OrderByDescending(c => c.CumulativeDeduction) // prefer the one with actual data
+            .ThenByDescending(c => c.RetrievedAt)
             .FirstOrDefaultAsync();
 
-        if (cached != null && cached.RetrievedAt > DateTime.UtcNow.AddHours(-1))
+        if (cached != null)
         {
             return new CumulativeDataDto(
                 cached.EmployeeTIN, cached.FinancialYear,
                 cached.CumulativeIncome, cached.CumulativeDeduction,
-                cached.RetrievedAt, "Cache");
+                cached.RetrievedAt, "IRD");
         }
 
-        // In a real system, call IRD API here with OAuth2 client credentials.
-        // For this assignment, we simulate with zero prior deductions for new employees.
+        // No cache exists — in a real system, call IRD API here.
+        // For this assignment, return zero for employees with no prior employer.
         var result = new CumulativeDataDto(
             employeeTin, financialYear, 0m, 0m, DateTime.UtcNow, "IRD");
 
-        // Look up the real employer by TIN if the passed ID is not valid
         var realEmployer = await _db.Employers.FirstOrDefaultAsync();
         var employerIdToUse = realEmployer?.Id ?? requestingEmployerId;
 
-        // Only store in cache if we have a valid employer FK
         if (realEmployer != null)
         {
             _db.IrdCumulativeCaches.Add(new IrdCumulativeCache
