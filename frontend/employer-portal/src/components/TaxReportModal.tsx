@@ -111,11 +111,11 @@ export default function TaxReportModal({ report, period, onClose }: Props) {
 
           {/* Tax Summary Cards */}
           <div style={styles.summaryCards}>
-            <TaxCard label="Annual Tax (Current Salary)" value={report.annualTaxLiability} color="#003366" icon="📊" />
-            <TaxCard label="Monthly Without Adjustment" value={report.withoutSystemMonthly || Math.round(report.annualTaxLiability / 12)} color="#e74c3c" icon="❌" />
-            <TaxCard label="Cumulative Tax Already Paid" value={report.priorEmployerDeduction} color="#27ae60" icon="✓" />
-            <TaxCard label="Tax to Collect (This Employer)" value={report.remainingTaxForYear} color="#e67e22" icon="⏳" />
-            <TaxCard label="Adjusted Monthly (This FY)" value={report.adjustedMonthlyDeduction} color="#17a2b8" icon="✅" />
+            <TaxCard label="Annual PAYE Tax (Current Salary)" value={report.annualTaxLiability} color="#003366" icon="📊" />
+            <TaxCard label="Monthly PAYE Tax (Without Adjustment)" value={report.withoutSystemMonthly || Math.round(report.annualTaxLiability / 12)} color="#e74c3c" icon="❌" />
+            <TaxCard label="Cumulative PAYE Tax Already Paid" value={report.priorEmployerDeduction} color="#27ae60" icon="✓" />
+            <TaxCard label="PAYE Tax to Collect (This Employer)" value={report.remainingTaxForYear} color="#e67e22" icon="⏳" />
+            <TaxCard label="Adjusted Monthly PAYE Tax (This FY)" value={report.adjustedMonthlyDeduction} color="#17a2b8" icon="✅" />
           </div>
 
           {/* Prior Employer Section */}
@@ -123,8 +123,8 @@ export default function TaxReportModal({ report, period, onClose }: Props) {
             <div style={styles.priorBox}>
               <h4 style={{ margin: '0 0 8px', color: '#17a2b8' }}>📋 Prior Employer (IRD Data)</h4>
               <div style={{ display: 'flex', gap: '2rem' }}>
-                <span>Income: <strong>Rs. {report.priorEmployerIncome.toLocaleString()}</strong></span>
-                <span>Tax Deducted: <strong>Rs. {report.priorEmployerDeduction.toLocaleString()}</strong></span>
+                <span>Gross Employment Income (Prior Employer): <strong>Rs. {report.priorEmployerIncome.toLocaleString()}</strong></span>
+                <span>PAYE Tax Deducted (Prior Employer): <strong>Rs. {report.priorEmployerDeduction.toLocaleString()}</strong></span>
               </div>
             </div>
           )}
