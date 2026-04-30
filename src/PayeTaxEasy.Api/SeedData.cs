@@ -21,7 +21,7 @@ public static class SeedData
             var employer = new Employer
             {
                 Id = Guid.NewGuid(),
-                TIN = "EMP001TIN",
+                TIN = "200000001",
                 OrganizationName = "ABC Company Ltd",
                 RegistrationNumber = "REG001",
                 ContactEmail = "employer@test.com",
@@ -36,21 +36,21 @@ public static class SeedData
             var employees = new[]
             {
                 // 1. Below relief — full year stable (Rs. 150,000/month = Rs. 1,800,000/year → 0% tax)
-                new { TIN = "EMP100001V", Name = "Kamal Perera",       NIC = "900123456V", Email = "kamal.perera@test.com",       Phone = "+94771000001", Salary = 150_000m,  StartDate = new DateTime(2025, 4, 1),  EndDate = (DateTime?)null,              Scenario = "Below Tax Relief - Full Year" },
+                new { TIN = "100000001", Name = "Kamal Perera",       NIC = "900123456V", Email = "kamal.perera@test.com",       Phone = "+94771000001", Salary = 150_000m,  StartDate = new DateTime(2025, 4, 1),  EndDate = (DateTime?)null,              Scenario = "Below Tax Relief - Full Year" },
                 // 2. 6% slab — full year stable (Rs. 250,000/month = Rs. 3,000,000/year)
-                new { TIN = "EMP100002V", Name = "Nimal Silva",        NIC = "850234567V", Email = "nimal.silva@test.com",        Phone = "+94771000002", Salary = 250_000m,  StartDate = new DateTime(2025, 4, 1),  EndDate = (DateTime?)null,              Scenario = "6% Tax Slab - Full Year" },
+                new { TIN = "100000002", Name = "Nimal Silva",        NIC = "850234567V", Email = "nimal.silva@test.com",        Phone = "+94771000002", Salary = 250_000m,  StartDate = new DateTime(2025, 4, 1),  EndDate = (DateTime?)null,              Scenario = "6% Tax Slab - Full Year" },
                 // 3. Recently joined Oct 2025 (Rs. 320,000/month — adjusted deduction)
-                new { TIN = "EMP100003V", Name = "Priya Jayasinghe",   NIC = "920345678V", Email = "priya.jayasinghe@test.com",   Phone = "+94771000003", Salary = 320_000m,  StartDate = new DateTime(2025, 10, 1), EndDate = (DateTime?)null,              Scenario = "Recently Joined - Adjusted Deduction" },
+                new { TIN = "100000003", Name = "Priya Jayasinghe",   NIC = "920345678V", Email = "priya.jayasinghe@test.com",   Phone = "+94771000003", Salary = 320_000m,  StartDate = new DateTime(2025, 10, 1), EndDate = (DateTime?)null,              Scenario = "Recently Joined - Adjusted Deduction" },
                 // 4. Salary increase — started Rs. 200,000, increased to Rs. 350,000 from Aug 2025
-                new { TIN = "EMP100004V", Name = "Amali Fernando",     NIC = "880456789V", Email = "amali.fernando@test.com",     Phone = "+94771000004", Salary = 350_000m,  StartDate = new DateTime(2025, 4, 1),  EndDate = (DateTime?)null,              Scenario = "Salary Increase Mid-Year" },
+                new { TIN = "100000004", Name = "Amali Fernando",     NIC = "880456789V", Email = "amali.fernando@test.com",     Phone = "+94771000004", Salary = 350_000m,  StartDate = new DateTime(2025, 4, 1),  EndDate = (DateTime?)null,              Scenario = "Salary Increase Mid-Year" },
                 // 5. Salary decrease — started Rs. 400,000, decreased to Rs. 280,000 from Sep 2025
-                new { TIN = "EMP100005V", Name = "Suresh Bandara",     NIC = "870567890V", Email = "suresh.bandara@test.com",     Phone = "+94771000005", Salary = 280_000m,  StartDate = new DateTime(2025, 4, 1),  EndDate = (DateTime?)null,              Scenario = "Salary Decrease Mid-Year" },
+                new { TIN = "100000005", Name = "Suresh Bandara",     NIC = "870567890V", Email = "suresh.bandara@test.com",     Phone = "+94771000005", Salary = 280_000m,  StartDate = new DateTime(2025, 4, 1),  EndDate = (DateTime?)null,              Scenario = "Salary Decrease Mid-Year" },
                 // 6. Changed employer — joined this company Nov 2025 (prior deductions from IRD)
-                new { TIN = "EMP100006V", Name = "Roshan Wickrama",    NIC = "860678901V", Email = "roshan.wickrama@test.com",    Phone = "+94771000006", Salary = 500_000m,  StartDate = new DateTime(2025, 11, 1), EndDate = (DateTime?)null,              Scenario = "Changed Employer - Prior IRD Deductions" },
+                new { TIN = "100000006", Name = "Roshan Wickrama",    NIC = "860678901V", Email = "roshan.wickrama@test.com",    Phone = "+94771000006", Salary = 500_000m,  StartDate = new DateTime(2025, 11, 1), EndDate = (DateTime?)null,              Scenario = "Changed Employer - Prior IRD Deductions" },
                 // 7. Resigned Dec 2025 (left mid-year)
-                new { TIN = "EMP100007V", Name = "Dilani Rathnayake",  NIC = "950789012V", Email = "dilani.rathnayake@test.com",  Phone = "+94771000007", Salary = 180_000m,  StartDate = new DateTime(2025, 4, 1),  EndDate = (DateTime?)new DateTime(2025, 12, 31), Scenario = "Resigned Mid-Year" },
+                new { TIN = "100000007", Name = "Dilani Rathnayake",  NIC = "950789012V", Email = "dilani.rathnayake@test.com",  Phone = "+94771000007", Salary = 180_000m,  StartDate = new DateTime(2025, 4, 1),  EndDate = (DateTime?)new DateTime(2025, 12, 31), Scenario = "Resigned Mid-Year" },
                 // 8. High earner — 36% slab (Rs. 600,000/month = Rs. 7,200,000/year)
-                new { TIN = "EMP100008V", Name = "Chamara Dissanayake",NIC = "800890123V", Email = "chamara.dissanayake@test.com",Phone = "+94771000008", Salary = 600_000m,  StartDate = new DateTime(2025, 4, 1),  EndDate = (DateTime?)null,              Scenario = "High Earner - 36% Slab" },
+                new { TIN = "100000008", Name = "Chamara Dissanayake",NIC = "800890123V", Email = "chamara.dissanayake@test.com",Phone = "+94771000008", Salary = 600_000m,  StartDate = new DateTime(2025, 4, 1),  EndDate = (DateTime?)null,              Scenario = "High Earner - 36% Slab" },
             };
 
             foreach (var e in employees)
@@ -181,7 +181,7 @@ public static class SeedData
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@1234"),
                     Role = "Employer",
                     FullName = "ABC Company Ltd",
-                    TIN = "EMP001TIN",
+                    TIN = "200000001",
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 });

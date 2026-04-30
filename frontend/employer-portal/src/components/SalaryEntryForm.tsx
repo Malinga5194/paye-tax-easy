@@ -17,6 +17,7 @@ export default function SalaryEntryForm({ financialYear, onSuccess, onCancel }: 
   const validate = () => {
     const e: Record<string, string> = {};
     if (!tin.trim()) e.tin = 'Employee TIN is required.';
+    else if (!/^\d{9}$/.test(tin.trim())) e.tin = 'TIN must be exactly 9 digits.';
     if (!salary || parseFloat(salary) <= 0) e.salary = 'Gross monthly salary must be greater than 0.';
     if (!startDate) e.startDate = 'Employment start date is required.';
     setErrors(e);
@@ -50,7 +51,7 @@ export default function SalaryEntryForm({ financialYear, onSuccess, onCancel }: 
         <p style={styles.fy}>Financial Year: {financialYear}</p>
         <form onSubmit={handleSubmit}>
           <Field label="Employee TIN" error={errors.tin}>
-            <input style={styles.input} value={tin} onChange={e => setTin(e.target.value)} placeholder="e.g. 123456789V" />
+            <input style={styles.input} value={tin} onChange={e => setTin(e.target.value)} placeholder="e.g. 100000001" maxLength={9} pattern="\d{9}" />
           </Field>
           <Field label="Gross Monthly Salary (Rs.)" error={errors.salary}>
             <input style={styles.input} type="number" value={salary} onChange={e => setSalary(e.target.value)} placeholder="e.g. 150000" min="1" />

@@ -18,6 +18,11 @@ public class PayrollController : ControllerBase
     [HttpPost("employees/{tin}/salary")]
     public async Task<IActionResult> AddSalary(string tin, [FromBody] AddSalaryRequest req)
     {
+        if (!System.Text.RegularExpressions.Regex.IsMatch(tin, @"^\d{9}$"))
+            return UnprocessableEntity(new ErrorResponse("PAYROLL_005",
+                "TIN must be exactly 9 digits.",
+                "employeeTIN", "Enter a valid 9-digit Taxpayer Identification Number."));
+
         if (req.GrossMonthlySalary <= 0)
             return UnprocessableEntity(new ErrorResponse("PAYROLL_001",
                 "Gross monthly salary must be a positive value in Sri Lankan Rupees.",

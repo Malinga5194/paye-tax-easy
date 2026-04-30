@@ -144,7 +144,7 @@ using (var scope = app.Services.CreateScope())
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@1234"),
                 Role = "SystemAdmin",
                 FullName = "System Administrator",
-                TIN = "ADMIN001",
+                TIN = "400000002",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             });
@@ -176,11 +176,11 @@ app.MapPost("/auth/login", async (LoginRequest req, PayeTaxEasy.Infrastructure.D
     // Check hardcoded dev users FIRST (no DB needed)
     var devUsers = new Dictionary<string, (string role, string tin, string name)>
     {
-        ["employer@test.com"]       = ("Employer",    "EMP001TIN",  "ABC Company Ltd"),
-        ["employee@test.com"]       = ("Employee",    "EMP123456V", "John Silva"),
-        ["ird@test.com"]            = ("IRD_Officer", "IRD001",     "IRD Officer"),
-        ["admin@test.com"]          = ("SystemAdmin", "ADM001",     "System Admin"),
-        ["admin@payetaxeasy.lk"]    = ("SystemAdmin", "ADMIN001",   "System Administrator"),
+        ["employer@test.com"]       = ("Employer",    "200000001",  "ABC Company Ltd"),
+        ["employee@test.com"]       = ("Employee",    "100000001",  "John Silva"),
+        ["ird@test.com"]            = ("IRD_Officer", "300000001",  "IRD Officer"),
+        ["admin@test.com"]          = ("SystemAdmin", "400000001",  "System Admin"),
+        ["admin@payetaxeasy.lk"]    = ("SystemAdmin", "400000002",  "System Administrator"),
     };
 
     if (devUsers.TryGetValue(req.Email.ToLower(), out var devUser))
