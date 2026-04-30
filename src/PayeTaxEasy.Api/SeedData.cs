@@ -56,6 +56,15 @@ public static class SeedData
                 IsActive = true, CreatedAt = DateTime.UtcNow
             });
 
+            // IRD Officer login
+            db.AppUsers.Add(new AppUser
+            {
+                Email = "ird@test.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(PWD),
+                Role = "IRD_Officer", FullName = "IRD Officer", TIN = "IRD-0001",
+                IsActive = true, CreatedAt = DateTime.UtcNow
+            });
+
             // ── Define monthly salary schedules per employee ──────────────────
             // Each entry: (TIN, Name, NIC, Email, Phone, monthly salary schedule, prior employer data)
             var scenarios = new[]

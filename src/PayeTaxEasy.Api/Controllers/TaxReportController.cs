@@ -81,8 +81,12 @@ public class TaxReportController : ControllerBase
         decimal withoutSystemMonthly = standardMonthly;
 
         // WITH our system (adjusted using cumulative from IRD)
-        decimal withSystemTotal = Math.Max(0, withoutSystemTotal - priorEmployerDeduction);
-        decimal adjustedMonthly = Math.Max(0, Math.Round(withSystemTotal / remainingMonths, 0));
+        // Use actual projected FY income (prior income + current salary × remaining months)
+        // to determine the real tax liability for this financial year
+        decimal actualProjectedIncome = priorEmployerIncome + (payroll.GrossMonthlySalary * remainingMonths);
+        decimal actualAnnualTax = PayeCalculator.CalculateAnnualTax(actualProjectedIncome);
+        decimal withSystemTotal = Math.Max(0, actualAnnualTax - priorEmployerDeduction);
+        decimal adjustedMonthly = remainingMonths > 0 ? Math.Max(0, Math.Round(withSystemTotal / remainingMonths, 0)) : 0;
 
         // Savings for the employee
         decimal savingsPerMonth = withoutSystemMonthly - adjustedMonthly;
@@ -90,10 +94,10 @@ public class TaxReportController : ControllerBase
 
         decimal currentEmployerYTD = allDeductions.Sum(d => d.MonthlyDeductionAmount);
         decimal totalYTD = priorEmployerDeduction + currentEmployerYTD;
-        decimal annualTaxLiability = annualTaxOnCurrentSalary;
+        decimal annualTaxLiability = actualAnnualTax;
         // Remaining tax = what this employer needs to collect for this FY (the adjusted total)
-        decimal remainingTax = withSystemTotal;
-        decimal projectedAnnual = payroll.GrossMonthlySalary * 12;
+        decimal remainingTax = Math.Max(0, withSystemTotal - currentEmployerYTD);
+        decimal projectedAnnual = actualProjectedIncome;
 
         var report = new
         {
@@ -138,6 +142,13 @@ public class TaxReportController : ControllerBase
             remainingTaxForYear = remainingTax,
             remainingMonthsInFY = remainingMonths,
             adjustedMonthlyDeduction = adjustedMonthly,
+
+            // Next FY standard monthly (based on full-year salary, no adjustments)
+            nextFyStandardMonthly = standardMonthly,
+            // Whether employee has prior employer data
+            hasPriorEmployer = priorEmployerDeduction > 0 || priorEmployerIncome > 0,
+            // Full year annual tax (salary × 12) for reference
+            fullYearAnnualTax = annualTaxOnCurrentSalary,
 
             // Monthly history (ALL employers)
             monthlyHistory = allEmployerDeductions.Select(d => new

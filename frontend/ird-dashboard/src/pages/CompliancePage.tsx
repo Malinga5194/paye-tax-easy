@@ -75,6 +75,8 @@ export default function CompliancePage() {
               <option value="2024-25">FY 2024-25</option>
             </select>
             <button style={{ ...btn, background: '#6c757d' }} onClick={() => navigate('/audit-logs')}>Audit Logs</button>
+            <button style={{ ...btn, background: COLOR }} onClick={() => navigate('/employee-search')}>👤 Employee Search</button>
+            <button style={{ ...btn, background: COLOR }} onClick={() => navigate('/employer-search')}>🏢 Employer Search</button>
             <button style={{ ...btn, background: '#27ae60' }} onClick={exportCsv}>Export CSV</button>
           </div>
         </div>

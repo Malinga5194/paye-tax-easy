@@ -143,3 +143,72 @@ public record EmployeeTaxSummaryDto(
     decimal AdjustedMonthly,
     DateTime JoiningDate,
     bool HasPriorEmployer);
+
+// Employee TIN search result — all fields needed for the search result card and PDF
+public record EmployeeTinSearchResultDto(
+    string EmployeeTIN,
+    string EmployeeName,
+    string CurrentEmployer,
+    decimal GrossMonthlySalary,
+    decimal ProjectedAnnualIncome,
+    decimal TaxRelief,
+    decimal AnnualTaxLiability,
+    decimal StandardMonthly,
+    decimal AdjustedMonthly,
+    decimal PriorEmployerIncome,
+    decimal PriorEmployerDeduction,
+    decimal CurrentEmployerYTD,
+    decimal TotalTaxPaid,
+    decimal RemainingTaxForYear,
+    int RemainingMonthsInFY,
+    decimal WithoutSystemTotal,
+    decimal WithSystemTotal,
+    decimal SavingsPerMonth,
+    DateTime JoiningDate,
+    bool HasPriorEmployer,
+    string FinancialYear,
+    IEnumerable<TaxSlabDto> Slabs,
+    IEnumerable<MonthlyHistoryEntryDto> MonthlyHistory);
+
+public record TaxSlabDto(
+    string Band,
+    string Rate,
+    decimal TaxableAmount,
+    decimal Tax);
+
+public record MonthlyHistoryEntryDto(
+    string Month,
+    string MonthLabel,
+    string EmployerName,
+    decimal GrossIncome,
+    decimal DeductionAmount,
+    decimal CumulativeAtMonth);
+
+// Employer TIN search result — all fields needed for the search result card and PDF
+public record EmployerTinSearchResultDto(
+    string EmployerTIN,
+    string OrganizationName,
+    string RegistrationNumber,
+    string ContactEmail,
+    int EmployeeCount,
+    int TotalSubmissions,
+    decimal TotalPAYESubmitted,
+    DateTime? LatestSubmissionDate,
+    string? LatestSubmissionRef,
+    string FinancialYear,
+    IEnumerable<EmployerEmployeeDto> Employees,
+    IEnumerable<EmployerSubmissionDto> Submissions);
+
+public record EmployerEmployeeDto(
+    string EmployeeTIN,
+    string EmployeeName,
+    decimal GrossMonthlySalary,
+    DateTime JoiningDate,
+    bool IsActive);
+
+public record EmployerSubmissionDto(
+    string? IRDReferenceNumber,
+    string Status,
+    decimal TotalPAYEAmount,
+    DateTime SubmittedAt,
+    string FinancialYear);

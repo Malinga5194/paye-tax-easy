@@ -14,6 +14,7 @@ interface User {
   tin: string;
   isActive: boolean;
   createdAt: string;
+  isProtected: boolean;
 }
 
 const ROLES = ['Employer', 'Employee', 'IRD_Officer', 'SystemAdmin'];
@@ -61,6 +62,17 @@ export default function UsersPage() {
 
   const filtered = filterRole === 'All' ? users : users.filter(u => u.role === filterRole);
 
+  // Get current user email from JWT to prevent self-deletion
+  const getCurrentUserEmail = () => {
+    const token = getToken();
+    if (!token) return '';
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return (payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || payload.email || '').toLowerCase();
+    } catch { return ''; }
+  };
+  const currentEmail = getCurrentUserEmail();
+
   return (
     <div style={{ fontFamily: "'Segoe UI', sans-serif", background: '#f0f4f8', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header portalName="Admin Portal" portalIcon="🔐" color={COLOR} />
@@ -101,7 +113,7 @@ export default function UsersPage() {
                 <th style={th}>Full Name</th>
                 <th style={th}>Email</th>
                 <th style={th}>Role</th>
-                <th style={th}>TIN</th>
+                <th style={th}>TIN / Staff ID</th>
                 <th style={th}>Status</th>
                 <th style={th}>Created</th>
                 <th style={th}>Actions</th>
@@ -119,7 +131,11 @@ export default function UsersPage() {
                       {u.role.replace('_', ' ')}
                     </span>
                   </td>
-                  <td style={td}>{u.tin || '—'}</td>
+                  <td style={td}>
+                    {(u.role === 'IRD_Officer' || u.role === 'SystemAdmin')
+                      ? <span style={{ color: '#7b1fa2', fontSize: '0.85rem' }}>{u.tin || '—'}</span>
+                      : <code>{u.tin || '—'}</code>}
+                  </td>
                   <td style={td}>
                     <span style={{ color: u.isActive ? '#27ae60' : '#e74c3c', fontWeight: 600 }}>
                       {u.isActive ? '✓ Active' : '✗ Inactive'}
@@ -128,18 +144,26 @@ export default function UsersPage() {
                   <td style={td}>{new Date(u.createdAt).toLocaleDateString()}</td>
                   <td style={td}>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      <button style={{ ...btn, background: u.isActive ? '#e67e22' : '#27ae60' }}
-                        onClick={() => toggleUser(u.id, u.fullName, u.isActive)}>
-                        {u.isActive ? 'Deactivate' : 'Activate'}
-                      </button>
-                      <button style={{ ...btn, background: '#17a2b8' }}
-                        onClick={() => { setResetId(u.id); setNewPassword(''); }}>
-                        Reset Pwd
-                      </button>
-                      <button style={{ ...btn, background: '#e74c3c' }}
-                        onClick={() => deleteUser(u.id, u.fullName)}>
-                        Delete
-                      </button>
+                      {u.isProtected ? (
+                        <span style={{ color: '#888', fontSize: '0.8rem', fontStyle: 'italic' }}>🔒 Demo account</span>
+                      ) : (
+                        <>
+                          <button style={{ ...btn, background: u.isActive ? '#e67e22' : '#27ae60' }}
+                            onClick={() => toggleUser(u.id, u.fullName, u.isActive)}>
+                            {u.isActive ? 'Deactivate' : 'Activate'}
+                          </button>
+                          <button style={{ ...btn, background: '#17a2b8' }}
+                            onClick={() => { setResetId(u.id); setNewPassword(''); }}>
+                            Reset Pwd
+                          </button>
+                          <button style={{ ...btn, background: '#e74c3c' }}
+                            onClick={() => deleteUser(u.id, u.fullName)}
+                            disabled={u.email.toLowerCase() === currentEmail}
+                            title={u.email.toLowerCase() === currentEmail ? 'You cannot delete your own account' : 'Delete user'}>
+                            Delete
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -180,6 +204,7 @@ function CreateUserModal({ headers, onClose, onCreated }: { headers: any; onClos
   const API = import.meta.env.VITE_API_URL || 'http://localhost:5050';
 
   const set = (f: string, v: string) => setForm(p => ({ ...p, [f]: v }));
+  const needsTin = form.role === 'Employer' || form.role === 'Employee';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,11 +212,13 @@ function CreateUserModal({ headers, onClose, onCreated }: { headers: any; onClos
     if (!form.fullName) errs.fullName = 'Required';
     if (!form.email) errs.email = 'Required';
     if (!form.password || form.password.length < 6) errs.password = 'Min 6 characters';
+    if (needsTin && (!form.tin || !/^\d{9}$/.test(form.tin.trim()))) errs.tin = 'A valid 9-digit TIN is required';
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
     setLoading(true);
     try {
-      await axios.post(`${API}/admin/users`, form, { headers });
+      const payload = { ...form, tin: needsTin ? form.tin : '' };
+      await axios.post(`${API}/admin/users`, payload, { headers });
       onCreated(`User "${form.fullName}" created successfully.`);
     } catch (err: any) {
       setErrors({ general: err.response?.data?.message || 'Failed to create user.' });
@@ -206,11 +233,20 @@ function CreateUserModal({ headers, onClose, onCreated }: { headers: any; onClos
         <h3 style={{ margin: '0 0 1.5rem', color: '#b71c1c' }}>Create New User</h3>
         {errors.general && <div style={{ background: '#fdecea', color: '#c0392b', padding: '8px 12px', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.9rem' }}>⚠ {errors.general}</div>}
         <form onSubmit={handleSubmit}>
+          {/* Role selector — FIRST */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: '4px', fontSize: '0.9rem' }}>Role *</label>
+            <select style={{ width: '100%', padding: '9px 12px', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem' }}
+              value={form.role} onChange={e => { set('role', e.target.value); if (e.target.value !== 'Employer' && e.target.value !== 'Employee') set('tin', ''); }}>
+              {ROLES.map(r => <option key={r} value={r}>{r.replace('_', ' ')}</option>)}
+            </select>
+          </div>
+
+          {/* Standard fields */}
           {[
             { label: 'Full Name *', field: 'fullName', type: 'text', placeholder: 'Enter full name' },
             { label: 'Email *', field: 'email', type: 'email', placeholder: 'Enter email address' },
             { label: 'Password *', field: 'password', type: 'password', placeholder: 'Min 6 characters' },
-            { label: 'TIN (optional)', field: 'tin', type: 'text', placeholder: 'Taxpayer ID' },
           ].map(({ label, field, type, placeholder }) => (
             <div key={field} style={{ marginBottom: '1rem' }}>
               <label style={{ display: 'block', fontWeight: 600, marginBottom: '4px', fontSize: '0.9rem' }}>{label}</label>
@@ -220,14 +256,19 @@ function CreateUserModal({ headers, onClose, onCreated }: { headers: any; onClos
               {errors[field] && <p style={{ color: '#c0392b', fontSize: '0.82rem', margin: '3px 0 0' }}>{errors[field]}</p>}
             </div>
           ))}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', fontWeight: 600, marginBottom: '4px', fontSize: '0.9rem' }}>Role *</label>
-            <select style={{ width: '100%', padding: '9px 12px', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem' }}
-              value={form.role} onChange={e => set('role', e.target.value)}>
-              {ROLES.map(r => <option key={r} value={r}>{r.replace('_', ' ')}</option>)}
-            </select>
-          </div>
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+
+          {/* TIN field — only shown for Employer and Employee */}
+          {needsTin && (
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: '4px', fontSize: '0.9rem' }}>TIN *</label>
+              <input style={{ width: '100%', padding: '9px 12px', border: `1px solid ${errors.tin ? '#e74c3c' : '#ccc'}`, borderRadius: '6px', fontSize: '1rem', boxSizing: 'border-box' }}
+                type="text" placeholder="9-digit Taxpayer ID" value={form.tin} maxLength={9}
+                onChange={e => set('tin', e.target.value.replace(/\D/g, ''))} />
+              {errors.tin && <p style={{ color: '#c0392b', fontSize: '0.82rem', margin: '3px 0 0' }}>{errors.tin}</p>}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
             <button type="button" style={{ ...btn, background: '#6c757d' }} onClick={onClose}>Cancel</button>
             <button type="submit" style={{ ...btn, background: '#b71c1c' }} disabled={loading}>
               {loading ? 'Creating...' : 'Create User'}

@@ -12,11 +12,13 @@ public class IrdDashboardController : ControllerBase
 {
     private readonly IIrdDashboardService _dashboard;
     private readonly IAuditService _audit;
+    private readonly IIrdTinSearchService _tinSearch;
 
-    public IrdDashboardController(IIrdDashboardService dashboard, IAuditService audit)
+    public IrdDashboardController(IIrdDashboardService dashboard, IAuditService audit, IIrdTinSearchService tinSearch)
     {
         _dashboard = dashboard;
         _audit = audit;
+        _tinSearch = tinSearch;
     }
 
     /// <summary>GET /ird-dashboard/compliance/{financialYear}</summary>
@@ -75,5 +77,55 @@ public class IrdDashboardController : ControllerBase
     {
         var result = await _dashboard.GetAllEmployeesWithTaxAsync(financialYear);
         return Ok(result);
+    }
+
+    /// <summary>GET /ird-dashboard/search/employee/{tin} — Search employee by TIN</summary>
+    [HttpGet("search/employee/{tin}")]
+    public async Task<IActionResult> SearchEmployeeByTin(string tin, [FromQuery] string financialYear = "2025-26")
+    {
+        var actorId = User.FindFirst("sub")?.Value ?? "unknown";
+        var result = await _tinSearch.SearchEmployeeByTinAsync(tin, financialYear);
+        if (result == null)
+            return NotFound(new { message = $"No employee found with TIN {tin}" });
+
+        await _audit.RecordAsync(actorId, "IRD_Officer", "EmployeeTINSearchPerformed",
+            "Employee", tin, financialYear);
+        return Ok(result);
+    }
+
+    /// <summary>GET /ird-dashboard/search/employee/{tin}/pdf — Generate employee PDF report</summary>
+    [HttpGet("search/employee/{tin}/pdf")]
+    public async Task<IActionResult> GenerateEmployeePdf(string tin, [FromQuery] string financialYear = "2025-26")
+    {
+        var actorId = User.FindFirst("sub")?.Value ?? "unknown";
+        var pdfBytes = await _tinSearch.GenerateEmployeePdfAsync(tin, financialYear);
+        await _audit.RecordAsync(actorId, "IRD_Officer", "EmployeePDFReportGenerated",
+            "Employee", tin, financialYear);
+        return File(pdfBytes, "application/pdf", $"IRD_Employee_Report_{tin}_{financialYear}.pdf");
+    }
+
+    /// <summary>GET /ird-dashboard/search/employer/{tin} — Search employer by TIN</summary>
+    [HttpGet("search/employer/{tin}")]
+    public async Task<IActionResult> SearchEmployerByTin(string tin, [FromQuery] string financialYear = "2025-26")
+    {
+        var actorId = User.FindFirst("sub")?.Value ?? "unknown";
+        var result = await _tinSearch.SearchEmployerByTinAsync(tin, financialYear);
+        if (result == null)
+            return NotFound(new { message = $"No employer found with TIN {tin}" });
+
+        await _audit.RecordAsync(actorId, "IRD_Officer", "EmployerTINSearchPerformed",
+            "Employer", tin, financialYear);
+        return Ok(result);
+    }
+
+    /// <summary>GET /ird-dashboard/search/employer/{tin}/pdf — Generate employer PDF report</summary>
+    [HttpGet("search/employer/{tin}/pdf")]
+    public async Task<IActionResult> GenerateEmployerPdf(string tin, [FromQuery] string financialYear = "2025-26")
+    {
+        var actorId = User.FindFirst("sub")?.Value ?? "unknown";
+        var pdfBytes = await _tinSearch.GenerateEmployerPdfAsync(tin, financialYear);
+        await _audit.RecordAsync(actorId, "IRD_Officer", "EmployerPDFReportGenerated",
+            "Employer", tin, financialYear);
+        return File(pdfBytes, "application/pdf", $"IRD_Employer_Report_{tin}_{financialYear}.pdf");
     }
 }

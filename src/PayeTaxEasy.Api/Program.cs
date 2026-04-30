@@ -144,7 +144,7 @@ using (var scope = app.Services.CreateScope())
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@1234"),
                 Role = "SystemAdmin",
                 FullName = "System Administrator",
-                TIN = "400000002",
+                TIN = "ADM-0001",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             });
@@ -242,14 +242,34 @@ app.MapPost("/auth/register", async (RegisterRequest req, PayeTaxEasy.Infrastruc
         || string.IsNullOrWhiteSpace(req.FullName) || string.IsNullOrWhiteSpace(req.Role))
         return Results.Json(new { errorCode = "REG_001", message = "All fields are required." }, statusCode: 422);
 
+    if (string.IsNullOrWhiteSpace(req.TIN) || req.TIN.Trim().Length != 9 || !req.TIN.Trim().All(char.IsDigit))
+        return Results.Json(new { errorCode = "REG_004", message = "A valid 9-digit TIN is required." }, statusCode: 422);
+
     var validRoles = new[] { "Employer", "Employee", "IRD_Officer" };
     if (!validRoles.Contains(req.Role))
         return Results.Json(new { errorCode = "REG_002", message = "Invalid role. Must be Employer, Employee, or IRD_Officer." }, statusCode: 422);
+
+    // TIN is mandatory for Employer and Employee roles only
+    var tinRequiredRoles = new[] { "Employer", "Employee" };
+    if (tinRequiredRoles.Contains(req.Role) &&
+        (string.IsNullOrWhiteSpace(req.TIN) || req.TIN.Trim().Length != 9 || !req.TIN.Trim().All(char.IsDigit)))
+        return Results.Json(new { errorCode = "REG_004", message = "A valid 9-digit TIN is required for Employer and Employee roles." }, statusCode: 422);
 
     var allUsers = await db.AppUsers.ToListAsync();
     var exists = allUsers.Any(u => u.Email.Equals(req.Email, StringComparison.OrdinalIgnoreCase));
     if (exists)
         return Results.Json(new { errorCode = "REG_003", message = "An account with this email already exists." }, statusCode: 409);
+
+    // Check TIN uniqueness for Employer/Employee roles
+    if (tinRequiredRoles.Contains(req.Role) && !string.IsNullOrWhiteSpace(req.TIN))
+    {
+        var tinTrimmed = req.TIN.Trim();
+        var tinExists = allUsers.Any(u => u.TIN == tinTrimmed)
+            || await db.Employees.AnyAsync(e => e.TIN == tinTrimmed)
+            || await db.Employers.AnyAsync(e => e.TIN == tinTrimmed);
+        if (tinExists)
+            return Results.Json(new { errorCode = "REG_005", message = $"TIN {tinTrimmed} is already registered in the system." }, statusCode: 409);
+    }
 
     var newUser = new PayeTaxEasy.Infrastructure.Entities.AppUser
     {

@@ -28,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IEmployeePortalService, EmployeePortalService>();
         services.AddScoped<IIrdDashboardService, IrdDashboardService>();
+        services.AddScoped<IIrdTinSearchService, IrdTinSearchService>();
 
         return services;
     }

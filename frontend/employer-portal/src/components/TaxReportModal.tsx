@@ -36,6 +36,9 @@ interface TaxReport {
   remainingMonthsInFY: number;
   adjustedMonthlyDeduction: number;
   monthlyHistory: MonthlyEntry[];
+  hasPriorEmployer?: boolean;
+  nextFyStandardMonthly?: number;
+  fullYearAnnualTax?: number;
 }
 
 interface Props {
@@ -135,18 +138,35 @@ export default function TaxReportModal({ report, period, onClose }: Props) {
               <span style={styles.noticeIcon}>⚠️</span>
               <span style={styles.noticeTitle}>Important Notice — PAYE Tax Adjustment</span>
             </div>
-            <p style={styles.noticeText}>
-              The monthly PAYE deduction for this employee has been <strong>adjusted</strong> based on the
-              cumulative tax already paid during this financial year ({report.financialYear}).
-            </p>
+            {report.hasPriorEmployer ? (
+              <p style={styles.noticeText}>
+                The monthly PAYE deduction for this employee has been <strong>adjusted</strong> based on the
+                cumulative tax already paid during this financial year ({report.financialYear}).
+              </p>
+            ) : report.adjustedMonthlyDeduction === 0 && report.annualTaxLiability === 0 ? (
+              <p style={styles.noticeText}>
+                This employee's projected income for the current financial year ({report.financialYear}) is
+                <strong> below the tax relief threshold of Rs. 1,800,000</strong>. Therefore, <strong>no PAYE tax
+                is applicable</strong> for the remaining {report.remainingMonthsInFY} month{report.remainingMonthsInFY !== 1 ? 's' : ''} of this financial year.
+              </p>
+            ) : (
+              <p style={styles.noticeText}>
+                The monthly PAYE deduction for this employee has been calculated based on the projected income
+                for the remaining {report.remainingMonthsInFY} month{report.remainingMonthsInFY !== 1 ? 's' : ''} of this financial year ({report.financialYear}).
+              </p>
+            )}
             <div style={styles.noticeHighlights}>
-              <div style={styles.highlightItem}>
-                <span style={styles.highlightLabel}>Cumulative Tax Already Paid (IRD)</span>
-                <span style={{ ...styles.highlightValue, color: '#27ae60' }}>
-                  Rs. {report.priorEmployerDeduction.toLocaleString()}
-                </span>
-              </div>
-              <div style={styles.highlightDivider} />
+              {report.hasPriorEmployer && (
+                <>
+                  <div style={styles.highlightItem}>
+                    <span style={styles.highlightLabel}>Cumulative Tax Already Paid (IRD)</span>
+                    <span style={{ ...styles.highlightValue, color: '#27ae60' }}>
+                      Rs. {report.priorEmployerDeduction.toLocaleString()}
+                    </span>
+                  </div>
+                  <div style={styles.highlightDivider} />
+                </>
+              )}
               <div style={styles.highlightItem}>
                 <span style={styles.highlightLabel}>Adjusted Monthly Deduction (This FY)</span>
                 <span style={{ ...styles.highlightValue, color: '#17a2b8' }}>
@@ -157,21 +177,32 @@ export default function TaxReportModal({ report, period, onClose }: Props) {
               <div style={styles.highlightItem}>
                 <span style={styles.highlightLabel}>Standard Monthly (Next FY — No Adjustments)</span>
                 <span style={{ ...styles.highlightValue, color: '#003366' }}>
-                  Rs. {Math.round(report.annualTaxLiability / 12).toLocaleString()}
+                  Rs. {(report.nextFyStandardMonthly || Math.round((report.fullYearAnnualTax || report.annualTaxLiability) / 12)).toLocaleString()}
                 </span>
               </div>
             </div>
-            <p style={styles.noticeFooter}>
-              📌 <strong>Note:</strong> The adjusted amount of{' '}
-              <span style={styles.inlineHighlight}>Rs. {report.adjustedMonthlyDeduction.toLocaleString()}</span>{' '}
-              will be charged for the remaining{' '}
-              <span style={styles.inlineHighlight}>{report.remainingMonthsInFY} month{report.remainingMonthsInFY !== 1 ? 's' : ''}</span>{' '}
-              of the current financial year ({report.financialYear}). This adjusted amount considers the cumulative
-              tax already paid by the employee during this financial year.{' '}
-              <strong>From the next financial year, no adjustments will be applied</strong> — the standard monthly deduction of{' '}
-              <span style={styles.inlineHighlight}>Rs. {Math.round(report.annualTaxLiability / 12).toLocaleString()}</span>{' '}
-              will be charged fresh based on the employee's current salary, without considering any prior cumulative payments.
-            </p>
+            {report.adjustedMonthlyDeduction === 0 && report.annualTaxLiability === 0 && !report.hasPriorEmployer ? (
+              <p style={styles.noticeFooter}>
+                📌 <strong>Note:</strong> No PAYE tax will be charged for the remaining{' '}
+                <span style={styles.inlineHighlight}>{report.remainingMonthsInFY} month{report.remainingMonthsInFY !== 1 ? 's' : ''}</span>{' '}
+                of the current financial year ({report.financialYear}) as the employee's projected income is within the tax relief.{' '}
+                <strong>From the next financial year</strong>, if the employee continues at the current salary, the standard monthly deduction of{' '}
+                <span style={styles.inlineHighlight}>Rs. {(report.nextFyStandardMonthly || Math.round((report.fullYearAnnualTax || report.annualTaxLiability) / 12)).toLocaleString()}</span>{' '}
+                will apply based on a full year's projected income.
+              </p>
+            ) : (
+              <p style={styles.noticeFooter}>
+                📌 <strong>Note:</strong> The adjusted amount of{' '}
+                <span style={styles.inlineHighlight}>Rs. {report.adjustedMonthlyDeduction.toLocaleString()}</span>{' '}
+                will be charged for the remaining{' '}
+                <span style={styles.inlineHighlight}>{report.remainingMonthsInFY} month{report.remainingMonthsInFY !== 1 ? 's' : ''}</span>{' '}
+                of the current financial year ({report.financialYear}).{' '}
+                {report.hasPriorEmployer && 'This adjusted amount considers the cumulative tax already paid by the employee during this financial year. '}
+                <strong>From the next financial year, no adjustments will be applied</strong> — the standard monthly deduction of{' '}
+                <span style={styles.inlineHighlight}>Rs. {(report.nextFyStandardMonthly || Math.round((report.fullYearAnnualTax || report.annualTaxLiability) / 12)).toLocaleString()}</span>{' '}
+                will be charged fresh based on the employee's current salary, without considering any prior cumulative payments.
+              </p>
+            )}
           </div>
 
           {/* Tax Slab Breakdown */}

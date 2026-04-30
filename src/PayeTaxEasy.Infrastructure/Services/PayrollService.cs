@@ -198,17 +198,20 @@ public class PayrollService : IPayrollService
             // Tax employer would charge for remaining months (without our system)
             decimal taxForRemainingMonths = standardMonthly * remainingMonths;
 
-            // WITH our system: deduct cumulative already paid
-            decimal withSystemTotal = Math.Max(0, taxForRemainingMonths - priorDeduction);
+            // WITH our system: use actual projected FY income to determine real tax liability
+            decimal priorIncome = irdData?.CumulativeIncome ?? 0;
+            decimal actualProjectedIncome = priorIncome + (p.GrossMonthlySalary * remainingMonths);
+            decimal actualAnnualTax = PayeCalculator.CalculateAnnualTax(actualProjectedIncome);
+            decimal withSystemTotal = Math.Max(0, actualAnnualTax - priorDeduction);
 
             // Adjusted monthly = withSystemTotal / remaining months
-            decimal adjustedMonthly = Math.Max(0, Math.Round(withSystemTotal / remainingMonths, 0));
+            decimal adjustedMonthly = remainingMonths > 0 ? Math.Max(0, Math.Round(withSystemTotal / remainingMonths, 0)) : 0;
 
             // Cumulative tax paid = only prior employer (IRD data)
             decimal cumulativeTaxPaid = priorDeduction;
 
-            // Annual tax liability = standard monthly × 12 (based on current salary)
-            decimal annualTax = annualTaxOnCurrentSalary;
+            // Annual tax liability = actual tax for this FY based on projected income
+            decimal annualTax = actualAnnualTax;
 
             // Remaining tax = what this employer needs to collect for this FY
             decimal remainingTax = Math.Max(0, withSystemTotal);
