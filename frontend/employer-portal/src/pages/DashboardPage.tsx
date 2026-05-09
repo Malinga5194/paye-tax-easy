@@ -86,7 +86,7 @@ export default function DashboardPage() {
 
   return (
     <div style={{ fontFamily: "'Segoe UI', sans-serif", background: '#f0f4f8', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Header portalName="Employer Portal" portalIcon="🏢" color="#003366" />
+      <Header portalName="Employer Portal" portalIcon="🏢" color="#003366" onLogout={() => { sessionStorage.removeItem('paye_token'); window.location.href = '/login'; }} />
 
       <div style={styles.page}>
         {/* Page Header */}

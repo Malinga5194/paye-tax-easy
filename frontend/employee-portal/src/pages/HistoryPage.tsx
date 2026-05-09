@@ -72,7 +72,10 @@ export default function HistoryPage() {
           <span style={{ opacity: 0.4 }}>|</span>
           <span style={{ opacity: 0.85, fontSize: '0.95rem' }}>Employee Portal</span>
         </div>
-        <a href={HOME_URL} style={{ padding: '5px 14px', background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '4px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600 }}>← Home</a>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <a href={HOME_URL} style={{ padding: '5px 14px', background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '4px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600 }}>← Home</a>
+          <button onClick={() => { sessionStorage.removeItem('token'); window.location.href = '/login'; }} style={{ padding: '5px 14px', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>⏻ Logout</button>
+        </div>
       </nav>
       <div style={styles.page}>
       <header style={styles.header}>

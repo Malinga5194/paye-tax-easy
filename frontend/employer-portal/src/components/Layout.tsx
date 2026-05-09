@@ -4,9 +4,10 @@ interface HeaderProps {
   portalName: string;
   portalIcon: string;
   color: string;
+  onLogout?: () => void;
 }
 
-export function Header({ portalName, portalIcon, color }: HeaderProps) {
+export function Header({ portalName, portalIcon, color, onLogout }: HeaderProps) {
   return (
     <header style={{ ...styles.header, background: color }}>
       <div style={styles.headerLeft}>
@@ -19,6 +20,7 @@ export function Header({ portalName, portalIcon, color }: HeaderProps) {
       <div style={styles.headerRight}>
         <span style={styles.portalBadge}>{portalIcon} {portalName}</span>
         <a href={HOME_URL} style={styles.homeBtn}>← Home</a>
+        {onLogout && <button onClick={onLogout} style={styles.logoutBtn}>⏻ Logout</button>}
       </div>
     </header>
   );
@@ -74,6 +76,7 @@ const styles: Record<string, React.CSSProperties> = {
   headerRight: { display: 'flex', alignItems: 'center', gap: '1rem' },
   portalBadge: { background: 'rgba(255,255,255,0.15)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600 },
   homeBtn: { padding: '6px 16px', background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.5)', borderRadius: '6px', textDecoration: 'none', fontWeight: 600, fontSize: '0.85rem' },
+  logoutBtn: { padding: '6px 16px', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' },
   // Footer
   footer: { background: '#1a1a2e', color: '#ccc', padding: '2.5rem 2rem 1rem', marginTop: 'auto' },
   footerTop: { display: 'flex', gap: '2rem', flexWrap: 'wrap', marginBottom: '1.5rem', justifyContent: 'space-between' },

@@ -95,7 +95,7 @@ export default function EmployeeSearchPage() {
 
   return (
     <div style={{ fontFamily: "'Segoe UI', sans-serif", background: '#f0f4f8', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Header portalName="IRD Dashboard" portalIcon="🏛️" color={COLOR} />
+      <Header portalName="IRD Dashboard" portalIcon="🏛️" color={COLOR} onLogout={() => { sessionStorage.removeItem('token'); window.location.href = '/login'; }} />
 
       <div style={{ padding: '1.5rem', flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%' }}>
         {/* Page Header */}

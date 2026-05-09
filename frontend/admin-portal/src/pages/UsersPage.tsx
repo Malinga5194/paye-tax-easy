@@ -75,7 +75,7 @@ export default function UsersPage() {
 
   return (
     <div style={{ fontFamily: "'Segoe UI', sans-serif", background: '#f0f4f8', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Header portalName="Admin Portal" portalIcon="🔐" color={COLOR} />
+      <Header portalName="Admin Portal" portalIcon="🔐" color={COLOR} onLogout={() => { sessionStorage.removeItem('token'); window.location.href = '/login'; }} />
 
       <div style={{ padding: '1.5rem' }}>
         {/* Header */}
