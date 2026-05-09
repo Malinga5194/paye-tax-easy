@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getToken } from '../App';
+import TaxCalculator from '../components/TaxCalculator';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5050';
 const HOME_URL = 'http://localhost:5173';
@@ -27,6 +28,7 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [downloading, setDownloading] = useState(false);
+  const [showCalc, setShowCalc] = useState(false);
 
   const headers = { Authorization: `Bearer ${getToken()}` };
 
@@ -88,6 +90,9 @@ export default function HistoryPage() {
         <button style={styles.btnPdf} onClick={downloadPdf} disabled={downloading || !history}>
           {downloading ? 'Generating...' : '⬇ Download PDF'}
         </button>
+        <button style={{ ...styles.btnPdf, background: '#17a2b8' }} onClick={() => setShowCalc(true)}>
+          🧮 Tax Calculator
+        </button>
       </div>
 
       {error && <div style={styles.error}>{error}</div>}
@@ -119,6 +124,7 @@ export default function HistoryPage() {
         </>
       )}
     </div>
+    {showCalc && <TaxCalculator onClose={() => setShowCalc(false)} color="#1a6b3c" />}
     </div>
   );
 }

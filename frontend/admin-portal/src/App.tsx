@@ -2,8 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import UsersPage from './pages/UsersPage';
 
-let _token: string | null = null;
-export const setToken = (t: string | null) => { _token = t; };
+let _token: string | null = sessionStorage.getItem('token');
+export const setToken = (t: string | null) => { _token = t; if (t) sessionStorage.setItem('token', t); else sessionStorage.removeItem('token'); };
 export const getToken = () => _token;
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { apiClient } from '../api/client';
 import SalaryEntryForm from '../components/SalaryEntryForm';
 import TaxReportModal from '../components/TaxReportModal';
+import TaxCalculator from '../components/TaxCalculator';
 import { Header, Footer } from '../components/Layout';
 
 interface DeductionSummary {
@@ -37,6 +38,7 @@ export default function DashboardPage() {
   const [financialYear, setFinancialYear] = useState('2025-26');
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showCalc, setShowCalc] = useState(false);
   const [message, setMessage] = useState('');
   const [selectedReport, setSelectedReport] = useState<{ data: any; tin: string } | null>(null);
 
@@ -95,6 +97,7 @@ export default function DashboardPage() {
           </div>
           <div style={styles.actions}>
             <button style={styles.btnPrimary} onClick={() => setShowForm(true)}>+ Add / Link Employee</button>
+            <button style={{ ...styles.btnPrimary, background: '#17a2b8' }} onClick={() => setShowCalc(true)}>🧮 Tax Calculator</button>
             <button style={styles.btnSuccess} onClick={handleSubmit}>Submit to IRD</button>
           </div>
         </div>
@@ -198,6 +201,8 @@ export default function DashboardPage() {
           onSuccess={() => { setShowForm(false); loadSummary(); }}
           onCancel={() => setShowForm(false)} />
       )}
+
+      {showCalc && <TaxCalculator onClose={() => setShowCalc(false)} />}
 
       {selectedReport && (
         <TaxReportModal

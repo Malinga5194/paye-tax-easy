@@ -96,26 +96,38 @@ public class AdminController : ControllerBase
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
-        _db.AppUsers.Add(user);
-        await _db.SaveChangesAsync();
 
-        // Auto-create Employee or Employer entity so they can be used in payroll
-        if (req.Role == "Employee")
+        using var transaction = await _db.Database.BeginTransactionAsync();
+        try
         {
-            var employeeExists = await _db.Employees.AnyAsync(e => e.TIN == assignedTin);
-            if (!employeeExists)
+            _db.AppUsers.Add(user);
+            await _db.SaveChangesAsync();
+
+            // Auto-create Employee entity so they can be used in payroll
+            if (req.Role == "Employee")
             {
-                _db.Employees.Add(new PayeTaxEasy.Infrastructure.Entities.Employee
+                var employeeExists = await _db.Employees.AnyAsync(e => e.TIN == assignedTin);
+                if (!employeeExists)
                 {
-                    TIN = assignedTin,
-                    FullName = req.FullName,
-                    NICNumber = string.Empty,
-                    ContactEmail = req.Email.ToLower(),
-                    ContactPhone = string.Empty,
-                    CreatedAt = DateTime.UtcNow
-                });
-                await _db.SaveChangesAsync();
+                    _db.Employees.Add(new PayeTaxEasy.Infrastructure.Entities.Employee
+                    {
+                        TIN = assignedTin,
+                        FullName = req.FullName,
+                        NICNumber = $"NIC-{assignedTin}",
+                        ContactEmail = req.Email.ToLower(),
+                        ContactPhone = string.Empty,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                    await _db.SaveChangesAsync();
+                }
             }
+
+            await transaction.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return UnprocessableEntity(new { errorCode = "REG_006", message = $"Failed to create user: {ex.InnerException?.Message ?? ex.Message}" });
         }
 
         return Ok(new { message = "User created.", userId = user.Id });
