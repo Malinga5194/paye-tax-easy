@@ -174,14 +174,14 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 | Employee | Email | Password | Scenario |
 |---|---|---|---|
-| Kamal Perera | `kamal.perera@test.com` | `Test@1234` | Below tax relief (0%) — Rs. 150,000/month |
-| Nimal Silva | `nimal.silva@test.com` | `Test@1234` | 6% slab — stable salary Rs. 250,000/month |
-| Priya Jayasinghe | `priya.jayasinghe@test.com` | `Test@1234` | Recently joined Oct 2025 — adjusted deduction |
-| Amali Fernando | `amali.fernando@test.com` | `Test@1234` | Salary increase — Rs. 200k → Rs. 350k from Aug |
-| Suresh Bandara | `suresh.bandara@test.com` | `Test@1234` | Salary decrease — Rs. 400k → Rs. 280k from Sep |
-| Roshan Wickrama | `roshan.wickrama@test.com` | `Test@1234` | Changed employer — prior IRD deductions loaded |
-| Dilani Rathnayake | `dilani.rathnayake@test.com` | `Test@1234` | Resigned Dec 2025 — mid-year exit |
-| Chamara Dissanayake | `chamara.dissanayake@test.com` | `Test@1234` | High earner 36% slab — Rs. 600,000/month |
+| Amal Perera | `amal.perera@test.com` | `Test@1234` | Stable employment — Rs. 200,000/month |
+| Bhagya Silva | `bhagya.silva@test.com` | `Test@1234` | Mid-year promotion — Rs. 150k → Rs. 250k |
+| Chaminda Fernando | `chaminda.fernando@test.com` | `Test@1234` | Job change (prior employer) — Rs. 400,000/month |
+| Dilini Jayasinghe | `dilini.jayasinghe@test.com` | `Test@1234` | Layoff & re-employment — Rs. 200,000/month |
+| Eranga Bandara | `eranga.bandara@test.com` | `Test@1234` | Mid-year joiner Oct 2025 — Rs. 350,000/month |
+| Fathima Rizna | `fathima.rizna@test.com` | `Test@1234` | Below tax relief (0%) — Rs. 120,000/month |
+| Gayan Wickrama | `gayan.wickrama@test.com` | `Test@1234` | High earner 36% slab — Rs. 600,000/month |
+| Harsha Rathnayake | `harsha.rathnayake@test.com` | `Test@1234` | Resigned mid-year |
 
 ---
 
@@ -319,8 +319,8 @@ Or close all terminal windows.
 
 | Student ID | Name | Role |
 |---|---|---|
-| MS26906294 | Perera D.S.M. | Scrum Master |
-| MS26906508 | Fernando G.J.S. | Backend Developer |
-| MS26904214 | Fonseka E.A.R. | Product Owner |
-| MS26900322 | Gallage G.H.G.D.W. | Tester |
-| MS26907802 | Jayasinghe J.A.D.V.D. | Frontend Developer |
+| MS26906294 | Perera D.S.M. | Scrum Master, Backend Developer, Tester |
+| MS26904214 | Fonseka E.A.R. | Product Owner, Tester |
+| MS26907802 | Jayasinghe J.A.D.V.D. | Frontend Developer, Tester |
+| MS26906508 | Fernando G.J.S. | Discontinued the program |
+| MS26900322 | Gallage G.H.G.D.W. | Discontinued the program |
