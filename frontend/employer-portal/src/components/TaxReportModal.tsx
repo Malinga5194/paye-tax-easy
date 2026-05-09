@@ -39,6 +39,11 @@ interface TaxReport {
   hasPriorEmployer?: boolean;
   nextFyStandardMonthly?: number;
   fullYearAnnualTax?: number;
+  withoutSystemMonthly?: number;
+  withoutSystemTotal?: number;
+  withSystemTotal?: number;
+  standardMonthly?: number;
+  taxForRemainingMonths?: number;
 }
 
 interface Props {
@@ -103,10 +108,10 @@ export default function TaxReportModal({ report, period, onClose }: Props) {
             <h4 style={{ margin: '0 0 10px', color: '#003366' }}>📐 Tax Calculation Breakdown</h4>
             <table style={{ width: '100%', fontSize: '0.9rem' }}>
               <tbody>
-                <tr><td style={{ padding: '4px 0' }}><StepBadge n={1} /> Standard monthly deduction (based on current salary)</td><td style={{ textAlign: 'right', fontWeight: 600 }}>Rs. {(report.standardMonthly || Math.round(report.annualTaxLiability / 12)).toLocaleString()}</td></tr>
-                <tr><td style={{ padding: '4px 0' }}><StepBadge n={2} /> Tax for remaining {report.remainingMonthsInFY} months (<StepBadge n={1} small /> × {report.remainingMonthsInFY})</td><td style={{ textAlign: 'right', fontWeight: 600 }}>Rs. {(report.taxForRemainingMonths || (Math.round(report.annualTaxLiability / 12) * report.remainingMonthsInFY)).toLocaleString()}</td></tr>
+                <tr><td style={{ padding: '4px 0' }}><StepBadge n={1} /> Standard monthly deduction (based on current salary)</td><td style={{ textAlign: 'right', fontWeight: 600 }}>Rs. {(report.withoutSystemMonthly || report.standardMonthly || Math.round((report.fullYearAnnualTax || 0) / 12)).toLocaleString()}</td></tr>
+                <tr><td style={{ padding: '4px 0' }}><StepBadge n={2} /> Tax for remaining {report.remainingMonthsInFY} months (<StepBadge n={1} small /> × {report.remainingMonthsInFY})</td><td style={{ textAlign: 'right', fontWeight: 600 }}>Rs. {(report.withoutSystemTotal || ((report.withoutSystemMonthly || report.standardMonthly || Math.round((report.fullYearAnnualTax || 0) / 12)) * report.remainingMonthsInFY)).toLocaleString()}</td></tr>
                 <tr><td style={{ padding: '4px 0' }}><StepBadge n={3} /> Cumulative tax already paid (from IRD)</td><td style={{ textAlign: 'right', fontWeight: 600, color: '#27ae60' }}>− Rs. {report.priorEmployerDeduction.toLocaleString()}</td></tr>
-                <tr style={{ borderTop: '2px solid #003366' }}><td style={{ padding: '6px 0', fontWeight: 700 }}><StepBadge n={4} /> Remaining tax to collect (<StepBadge n={2} small /> − <StepBadge n={3} small />)</td><td style={{ textAlign: 'right', fontWeight: 700, color: '#e67e22' }}>Rs. {((report.taxForRemainingMonths || (Math.round(report.annualTaxLiability / 12) * report.remainingMonthsInFY)) - report.priorEmployerDeduction).toLocaleString()}</td></tr>
+                <tr style={{ borderTop: '2px solid #003366' }}><td style={{ padding: '6px 0', fontWeight: 700 }}><StepBadge n={4} /> Remaining tax to collect (② − ③)</td><td style={{ textAlign: 'right', fontWeight: 700, color: '#e67e22' }}>Rs. {(report.withSystemTotal || report.remainingTaxForYear || 0).toLocaleString()}</td></tr>
                 <tr><td style={{ padding: '6px 0', fontWeight: 700, color: '#003366' }}><StepBadge n={5} /> Adjusted monthly deduction (<StepBadge n={4} small /> ÷ {report.remainingMonthsInFY})</td><td style={{ textAlign: 'right', fontWeight: 700, color: '#17a2b8', fontSize: '1.1rem' }}>Rs. {report.adjustedMonthlyDeduction.toLocaleString()}</td></tr>
               </tbody>
             </table>

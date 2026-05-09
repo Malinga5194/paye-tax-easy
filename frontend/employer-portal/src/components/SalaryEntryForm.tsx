@@ -10,6 +10,7 @@ interface Props {
 export default function SalaryEntryForm({ financialYear, onSuccess, onCancel }: Props) {
   const [tin, setTin] = useState('');
   const [salary, setSalary] = useState('');
+  const [salaryDisplay, setSalaryDisplay] = useState('');
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -54,7 +55,7 @@ export default function SalaryEntryForm({ financialYear, onSuccess, onCancel }: 
             <input style={styles.input} value={tin} onChange={e => setTin(e.target.value)} placeholder="e.g. 100000001" maxLength={9} pattern="\d{9}" />
           </Field>
           <Field label="Gross Monthly Salary (Rs.)" error={errors.salary}>
-            <input style={styles.input} type="number" value={salary} onChange={e => setSalary(e.target.value)} placeholder="e.g. 150000" min="1" />
+            <input style={styles.input} type="text" value={salaryDisplay} onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ''); setSalary(raw); setSalaryDisplay(raw ? parseInt(raw).toLocaleString() : ''); }} placeholder="e.g. 350,000" />
           </Field>
           <Field label="Employment Start Date" error={errors.startDate}>
             <input style={styles.input} type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
